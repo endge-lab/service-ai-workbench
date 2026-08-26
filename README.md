@@ -1,10 +1,6 @@
 # Endge AI Workbench
 
-`service-ai-workbench` — приватный backend-сервис для будущей AI-подсистемы Endge.
-
-Сейчас репозиторий содержит только инфраструктурный Go-skeleton на основе
-`service-template-go` и `service-kit-go`. LLM, RAG, agent runs, инструменты и
-бизнесовые HTTP endpoints пока не реализованы.
+`service-ai-workbench` — приватный gRPC backend-сервис AI-подсистемы Endge.
 
 ## Граница сервиса
 
@@ -19,7 +15,7 @@ Configurator не должен обращаться к Workbench напряму�
 основной backend. Workbench будет отвечать за AI orchestration в рамках явно
 авторизованного запуска.
 
-## Что уже есть
+## Возможности v0.2.0
 
 - HTTP на Fiber;
 - dependency injection через `fx`;
@@ -27,11 +23,20 @@ Configurator не должен обращаться к Workbench напряму�
 - structured logging;
 - optional OpenTelemetry;
 - optional JWT/JWKS middleware;
-- optional PostgreSQL и Redpanda configuration;
+- PostgreSQL migrations для projections, conversations, messages и runs;
+- canonical `workbench.v1` protobuf и standard gRPC Health;
+- service-to-service OIDC authentication;
+- opaque cursor pagination, atomic reset и один active run на conversation;
+- hardcoded streaming adapters `anthropic` и `ollama` без внешних API-вызовов;
 - `/health` и `/version`;
 - Swagger/Scalar в non-production окружениях;
 - единый JSON-формат ошибок;
 - базовые architecture checks из service template.
+
+Canonical contract хранится в `api/proto/endge/ai/workbench/v1/workbench.proto`.
+После регенерации server/client stubs обновляются обе копии
+`workbench.v1.sha256`, а `../verify-workbench-contract.sh` проверяет отсутствие
+расхождения с backend client stubs.
 
 ## Локальный запуск
 
@@ -42,7 +47,7 @@ cp .env.development.example .env.development
 make run
 ```
 
-По умолчанию сервис слушает `http://localhost:8081`:
+По умолчанию HTTP health слушает `8081`, gRPC — `50051`:
 
 ```text
 GET http://localhost:8081/health
@@ -51,13 +56,7 @@ GET http://localhost:8081/swagger
 GET http://localhost:8081/swagger/openapi3.yaml
 ```
 
-Основной backend может использовать внутренний адрес Workbench, например:
-
-```text
-http://localhost:8081
-```
-
-Точный backend contract будет добавлен вместе с первой read-only AI-функцией.
+Основной backend использует `localhost:50051` или service DNS внутри compose.
 
 ## Docker
 
@@ -77,8 +76,7 @@ make down
 `service-kit-go` загружает `.env.*`, затем читает YAML из
 `configs/<APP_ENV>.yaml`. Environment variables имеют приоритет над YAML.
 
-PostgreSQL, auth, telemetry и Redpanda выключены или не используются, пока у
-сервиса нет соответствующего business flow. Обязательный CORS allowlist указывает
+PostgreSQL и service identity обязательны для штатного v1 flow. Обязательный CORS allowlist указывает
 на зарезервированный `https://cors-disabled.invalid`, поэтому browser-клиенты не
 получают прямой доступ к Workbench.
 
@@ -86,9 +84,7 @@ PostgreSQL, auth, telemetry и Redpanda выключены или не испо�
 
 Правила и будущие business layers описаны в [docs/architecture.md](docs/architecture.md).
 
-Бизнесовые endpoints добавляются под `/api/v1`. Usecase не должен импортировать
-HTTP или concrete PostgreSQL implementation, а HTTP handlers не должны работать
-с repository напрямую.
+Workbench не публикует browser business API. Usecase не импортирует gRPC или concrete PostgreSQL implementation, а gRPC handlers не работают с repository напрямую.
 
 ## Проверки
 

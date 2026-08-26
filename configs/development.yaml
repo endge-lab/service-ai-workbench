@@ -1,11 +1,17 @@
 app:
   env: development
   name: service_ai_workbench
-  version: 0.1.0
+  version: 0.2.0
   public_url: http://localhost:8081
 http:
   port: "8081"
   cors_allowed_origins: https://cors-disabled.invalid
+grpc:
+  enabled: true
+  port: 50051
+  max_receive_bytes: 33554432
+  max_send_bytes: 16777216
+  graceful_stop_timeout: 10s
 logger:
   level: debug
 postgres:
@@ -16,12 +22,22 @@ postgres:
   database: service_ai_workbench
   schema: public
   sslmode: disable
-  migrations_enabled: false
+  migrations_enabled: true
 auth:
   enabled: false
   jwks_path: /.well-known/jwks.json
   jwks_cache_ttl: 5m
   timeout: 5s
+service_identity:
+  verifier:
+    enabled: true
+    issuer: http://localhost:8180/realms/endge-local
+    jwks_url: http://localhost:8180/realms/endge-local/protocol/openid-connect/certs
+    audience: endge-ai-workbench
+    allowed_callers: endge-service-backend
+    allowed_algorithms: RS256
+    jwks_cache_ttl: 5m
+    timeout: 5s
 telemetry:
   enabled: false
   otlp_insecure: true

@@ -49,8 +49,8 @@ func TestNewRedpandaClientBuildsReaderAndWriter(t *testing.T) {
 	if got := reader.Config().GroupID; got != "service-ai-workbench" {
 		t.Fatalf("reader group = %q, want %q", got, "service-ai-workbench")
 	}
-	if got := reader.Config().Topic; got != "engagement.in-app.commands" {
-		t.Fatalf("reader topic = %q, want %q", got, "engagement.in-app.commands")
+	if got := reader.Config().Topic; got != "ai-workbench.commands" {
+		t.Fatalf("reader topic = %q, want %q", got, "ai-workbench.commands")
 	}
 
 	writer, err := client.NewWriter("engagement.in-app.commands")

@@ -1,10 +1,9 @@
 openapi: 3.0.3
 info:
   title: Endge AI Workbench API
-  version: 0.1.0
+  version: 0.2.0
   description: |
-    Internal Endge AI Workbench service skeleton with health, version,
-    middleware and telemetry wiring. Business endpoints are not implemented yet.
+    Technical HTTP endpoints. Business communication is gRPC-only through service-backend.
 servers:
   - url: /
 tags:
@@ -54,7 +53,7 @@ components:
           example: service_ai_workbench
         version:
           type: string
-          example: 0.1.0
+          example: 0.2.0
         env:
           type: string
           example: development
@@ -67,7 +66,7 @@ components:
           example: service_ai_workbench
         version:
           type: string
-          example: 0.1.0
+          example: 0.2.0
         env:
           type: string
           example: development

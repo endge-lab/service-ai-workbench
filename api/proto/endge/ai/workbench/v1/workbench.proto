@@ -1,0 +1,161 @@
+syntax = "proto3";
+
+package endge.ai.workbench.v1;
+
+option go_package = "github.com/endge-lab/service-ai-workbench/api/workbench/v1;workbenchv1";
+
+import "google/protobuf/timestamp.proto";
+
+service WorkbenchService {
+  rpc GetCapabilities(GetCapabilitiesRequest) returns (GetCapabilitiesResponse);
+  rpc ListConversations(ListConversationsRequest) returns (ListConversationsResponse);
+  rpc CreateConversation(CreateConversationRequest) returns (CreateConversationResponse);
+  rpc ResetConversation(ResetConversationRequest) returns (ResetConversationResponse);
+  rpc UpdateConversationModel(UpdateConversationModelRequest) returns (UpdateConversationModelResponse);
+  rpc ListMessages(ListMessagesRequest) returns (ListMessagesResponse);
+  rpc Run(RunRequest) returns (stream RunResponse);
+}
+
+message Actor {
+  string id = 1;
+  string username = 2;
+  string display_name = 3;
+}
+
+message Workspace {
+  string id = 1;
+  string name = 2;
+}
+
+message ModelSnapshot {
+  string profile_id = 1;
+  string connection_id = 2;
+  string adapter = 3;
+  string provider_model_id = 4;
+  string display_name = 5;
+}
+
+message GetCapabilitiesRequest {}
+
+message GetCapabilitiesResponse {
+  repeated string adapters = 1;
+}
+
+message Conversation {
+  string id = 1;
+  string actor_id = 2;
+  string workspace_id = 3;
+  ModelSnapshot model = 4;
+  bool archived = 5;
+  int64 message_count = 6;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp updated_at = 8;
+}
+
+message ListConversationsRequest {
+  string actor_id = 1;
+  string workspace_id = 2;
+  bool include_archived = 3;
+  uint32 limit = 4;
+  string cursor = 5;
+}
+
+message ListConversationsResponse {
+  repeated Conversation items = 1;
+  string next_cursor = 2;
+}
+
+message CreateConversationRequest {
+  Actor actor = 1;
+  Workspace workspace = 2;
+  ModelSnapshot model = 3;
+}
+
+message CreateConversationResponse {
+  Conversation conversation = 1;
+}
+
+message ResetConversationRequest {
+  Actor actor = 1;
+  Workspace workspace = 2;
+  string current_conversation_id = 3;
+  ModelSnapshot model = 4;
+}
+
+message ResetConversationResponse {
+  Conversation conversation = 1;
+}
+
+message UpdateConversationModelRequest {
+  string actor_id = 1;
+  string workspace_id = 2;
+  string conversation_id = 3;
+  ModelSnapshot model = 4;
+}
+
+message UpdateConversationModelResponse {
+  Conversation conversation = 1;
+}
+
+enum MessageRole {
+  MESSAGE_ROLE_UNSPECIFIED = 0;
+  MESSAGE_ROLE_USER = 1;
+  MESSAGE_ROLE_ASSISTANT = 2;
+}
+
+message Message {
+  string id = 1;
+  string conversation_id = 2;
+  MessageRole role = 3;
+  string content = 4;
+  int64 sequence = 5;
+  google.protobuf.Timestamp created_at = 6;
+}
+
+message ListMessagesRequest {
+  string actor_id = 1;
+  string workspace_id = 2;
+  string conversation_id = 3;
+  uint32 limit = 4;
+  string cursor = 5;
+}
+
+message ListMessagesResponse {
+  repeated Message items = 1;
+  string next_cursor = 2;
+}
+
+message WorkspaceSnapshot {
+  bytes payload = 1;
+  string generation = 2;
+  string head_revision_id = 3;
+  string sha256 = 4;
+}
+
+message RunRequest {
+  string request_id = 1;
+  Actor actor = 2;
+  Workspace workspace = 3;
+  string conversation_id = 4;
+  string prompt = 5;
+  ModelSnapshot model = 6;
+  WorkspaceSnapshot snapshot = 7;
+}
+
+enum RunEventType {
+  RUN_EVENT_TYPE_UNSPECIFIED = 0;
+  RUN_EVENT_TYPE_STARTED = 1;
+  RUN_EVENT_TYPE_CONTENT_DELTA = 2;
+  RUN_EVENT_TYPE_COMPLETED = 3;
+  RUN_EVENT_TYPE_FAILED = 4;
+}
+
+message RunResponse {
+  RunEventType type = 1;
+  string run_id = 2;
+  string message_id = 3;
+  string delta = 4;
+  string error_code = 5;
+  string error_message = 6;
+  google.protobuf.Timestamp created_at = 7;
+}

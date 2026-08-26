@@ -1,0 +1,10 @@
+version: v1
+plugins:
+  - plugin: go
+    out: .
+    opt:
+      - module=github.com/endge-lab/service-ai-workbench
+  - plugin: go-grpc
+    out: .
+    opt:
+      - module=github.com/endge-lab/service-ai-workbench

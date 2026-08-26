@@ -1,6 +1,6 @@
 # Test Strategy
 
-Сервис пока содержит только инфраструктурный smoke-level набор тестов.
+Сервис содержит unit, contract и PostgreSQL integration coverage для v1 flow.
 
 ## Что проверяется сейчас
 
