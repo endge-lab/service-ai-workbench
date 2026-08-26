@@ -1,0 +1,11 @@
+services:
+  service-ai-workbench:
+    container_name: service-ai-workbench
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - ${APP_RUNTIME_ENV_FILE:-.env.development}
+    ports:
+      - "${HOST_PORT:-8081}:8081"
+    restart: unless-stopped
