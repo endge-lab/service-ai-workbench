@@ -78,7 +78,9 @@ make down
 `configs/<APP_ENV>.yaml`. Environment variables имеют приоритет над YAML.
 
 PostgreSQL, auth, telemetry и Redpanda выключены или не используются, пока у
-сервиса нет соответствующего business flow.
+сервиса нет соответствующего business flow. Обязательный CORS allowlist указывает
+на зарезервированный `https://cors-disabled.invalid`, поэтому browser-клиенты не
+получают прямой доступ к Workbench.
 
 ## Архитектура
 

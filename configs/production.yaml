@@ -5,7 +5,7 @@ app:
   public_url: https://ai-workbench.example.com
 http:
   port: "8080"
-  cors_allowed_origins: ""
+  cors_allowed_origins: https://cors-disabled.invalid
 logger:
   level: info
 postgres:
