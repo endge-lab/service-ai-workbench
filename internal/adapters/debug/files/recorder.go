@@ -143,10 +143,11 @@ type contextPlanDebug struct {
 		Kind    string   `json:"тип"`
 		Signals []string `json:"сигналы"`
 	} `json:"интент"`
-	SourcePriority []string                        `json:"приоритет_источников"`
-	Budget         contextBudgetDebug              `json:"бюджет"`
-	Sections       []contextSectionBudgetDebug     `json:"секции"`
-	Decisions      []contextDecisionDebug          `json:"решения"`
+	SourcePriority []string                    `json:"приоритет_источников"`
+	Budget         contextBudgetDebug          `json:"бюджет"`
+	Sections       []contextSectionBudgetDebug `json:"секции"`
+	Decisions      []contextDecisionDebug      `json:"решения"`
+	Warnings       []string                    `json:"предупреждения"`
 }
 
 type contextBudgetDebug struct {
@@ -195,6 +196,7 @@ func renderContextPlan(plan entities.ContextPlan) contextPlanDebug {
 		},
 		Sections:  make([]contextSectionBudgetDebug, 0, len(plan.Sections)),
 		Decisions: make([]contextDecisionDebug, 0, len(plan.Decisions)),
+		Warnings:  plan.Warnings,
 	}
 	result.Intent.Kind = plan.Intent.Kind
 	result.Intent.Signals = plan.Intent.Signals
@@ -223,6 +225,8 @@ func renderContextPlan(plan entities.ContextPlan) contextPlanDebug {
 
 type modelRequestDebug struct {
 	Model struct {
+		ProfileID       string `json:"profile_id"`
+		ConnectionID    string `json:"connection_id"`
 		Adapter         string `json:"adapter"`
 		ProviderModelID string `json:"provider_model_id"`
 		DisplayName     string `json:"display_name"`
@@ -236,6 +240,8 @@ func renderModelRequest(request entities.ModelRequest) modelRequestDebug {
 		System:   request.SystemPrompt,
 		Messages: request.Messages,
 	}
+	result.Model.ProfileID = request.Model.ProfileID
+	result.Model.ConnectionID = request.Model.ConnectionID
 	result.Model.Adapter = request.Model.Adapter
 	result.Model.ProviderModelID = request.Model.ProviderModelID
 	result.Model.DisplayName = request.Model.DisplayName

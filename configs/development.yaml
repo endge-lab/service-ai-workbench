@@ -1,7 +1,6 @@
 app:
   env: development
   name: service_ai_workbench
-  version: 0.3.0
   public_url: http://localhost:8081
 http:
   port: "8081"

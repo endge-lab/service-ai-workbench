@@ -14,6 +14,7 @@ service WorkbenchService {
   rpc UpdateConversationModel(UpdateConversationModelRequest) returns (UpdateConversationModelResponse);
   rpc ListMessages(ListMessagesRequest) returns (ListMessagesResponse);
   rpc Run(RunRequest) returns (stream RunResponse);
+  rpc GetServiceInfo(GetServiceInfoRequest) returns (GetServiceInfoResponse);
 }
 
 message Actor {
@@ -158,4 +159,12 @@ message RunResponse {
   string error_code = 5;
   string error_message = 6;
   google.protobuf.Timestamp created_at = 7;
+}
+
+message GetServiceInfoRequest {}
+
+message GetServiceInfoResponse {
+  string service = 1;
+  string version = 2;
+  string env = 3;
 }

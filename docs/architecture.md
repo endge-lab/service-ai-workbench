@@ -39,7 +39,10 @@ Backend generates client stubs from the canonical proto but does not import this
 - The same normalized query selects matching documents from the trusted `ExportLive` snapshot and then adds one-hop documents that reference a selected identity.
 - Domain context always carries sanitized Workspace metadata and installed integrations; credential-like fields are redacted before debug output.
 - Conversation context takes the latest messages whose monotonic sequence is lower than the current user message sequence, so the current prompt cannot be duplicated.
-- Retrieved documentation, domain context and conversation context do not yet modify the hardcoded model request; they are recorded only for inspection.
+- A deterministic assembler classifies only an intent hint, removes exact duplicate blocks and allocates a character budget between recent complete conversation turns, domain and documentation.
+- The assembler produces one provider-neutral `ModelRequest`: a fixed safety/system prompt, selected history and a structured final user message containing trusted context plus the current request.
+- Character count is the enforced deterministic budget. Token count in debug output is explicitly an approximation until provider-specific tokenizers are introduced.
+- Both hardcoded adapters receive the assembled request but still do not perform external model calls.
 - Debug artifacts are best-effort, disabled by default and stored only under a Git-ignored runtime directory.
 
 Vector RAG, tools, revisions and domain mutations remain explicit non-goals.

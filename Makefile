@@ -13,9 +13,16 @@ endif
 -include $(LOCAL_ENV_FILE)
 export
 
-LDFLAGS := -s -w
 MAIN := ./cmd/main.go
 BIN := ./tmp/service-ai-workbench
+WORKBENCH_VERSION := $(strip $(shell tr -d '[:space:]' < VERSION))
+BUILDINFO_PACKAGE := github.com/endge-lab/service-ai-workbench/internal/buildinfo
+LDFLAGS := -s -w -X $(BUILDINFO_PACKAGE).Version=$(WORKBENCH_VERSION)
+
+.PHONY: validate-version
+validate-version:
+	@test -f VERSION
+	@grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$$' VERSION
 
 .PHONY: all
 all: mod build test
@@ -25,12 +32,12 @@ mod:
 	go mod tidy
 
 .PHONY: build
-build:
+build: validate-version
 	go build -ldflags="$(LDFLAGS)" -buildvcs=false -o $(BIN) $(MAIN)
 
 .PHONY: run
-run:
-	APP_ENV=$(APP_ENV) go run $(MAIN)
+run: validate-version
+	APP_ENV=$(APP_ENV) go run -ldflags="$(LDFLAGS)" $(MAIN)
 
 .PHONY: clean
 clean:

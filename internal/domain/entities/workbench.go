@@ -136,12 +136,12 @@ type ContextDecision struct {
 }
 
 type ContextSectionBudget struct {
-	Name          string
-	Priority      int
-	BudgetChars   int
-	UsedChars     int
+	Name           string
+	Priority       int
+	BudgetChars    int
+	UsedChars      int
 	CandidateCount int
-	IncludedCount int
+	IncludedCount  int
 }
 
 type ContextBudget struct {
@@ -162,6 +162,7 @@ type ContextPlan struct {
 	Budget         ContextBudget
 	Sections       []ContextSectionBudget
 	Decisions      []ContextDecision
+	Warnings       []string
 }
 
 type ModelMessage struct {

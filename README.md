@@ -15,7 +15,7 @@ Configurator не должен обращаться к Workbench напряму�
 основной backend. Workbench будет отвечать за AI orchestration в рамках явно
 авторизованного запуска.
 
-## Возможности v0.3.0
+## Возможности v0.4.0
 
 - HTTP на Fiber;
 - dependency injection через `fx`;
@@ -39,6 +39,11 @@ Canonical contract хранится в `api/proto/endge/ai/workbench/v1/workbenc
 После регенерации server/client stubs обновляются обе копии
 `workbench.v1.sha256`, а `../verify-workbench-contract.sh` проверяет отсутствие
 расхождения с backend client stubs.
+
+Единственный источник версии сервиса — корневой файл `VERSION`. `make`, Air и
+Docker встраивают его значение в бинарник; YAML и environment не владеют
+версией приложения. HTTP `/health`, `/version` и gRPC `GetServiceInfo` возвращают
+одну и ту же встроенную версию.
 
 ## Локальный запуск
 
@@ -98,17 +103,18 @@ AI_KNOWLEDGE_BUNDLE_PATH=/absolute/path/to/dist/knowledge
 AI_KNOWLEDGE_MAX_RESULTS=8
 AI_DOMAIN_CONTEXT_MAX_RESULTS=20
 AI_CONVERSATION_CONTEXT_MESSAGE_LIMIT=10
+AI_MODEL_CONTEXT_MAX_CHARS=24000
 AI_DEBUG=true
 AI_DEBUG_OUTPUT_PATH=tmp/debug
 ```
 
 При `AI_DEBUG=true` каждый run создаёт каталог
 `tmp/debug/<conversation-id>/<UTC-time>_<request-id>/`. Файлы имеют числовые
-префиксы `00`–`05`: metadata, prompt, поисковые выражения, документация,
-выбранный контекст актуального Workspace и последние сообщения до текущего
-prompt. Текущий prompt не дублируется в истории и добавляется к будущему model
-request отдельно. При `AI_DEBUG=false` файловая система debug recorder-ом не
-изменяется. `tmp/` целиком исключён из Git.
+префиксы `00`–`07`: metadata, prompt, поисковые выражения, документация,
+выбранный контекст актуального Workspace, последние сообщения, план бюджета и
+точный provider-neutral `ModelRequest`. Текущий prompt не дублируется в истории.
+При `AI_DEBUG=false` файловая система debug recorder-ом не изменяется. `tmp/`
+целиком исключён из Git.
 
 ## Архитектура
 

@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	workbenchv1 "github.com/endge-lab/service-ai-workbench/api/workbench/v1"
+	"github.com/endge-lab/service-ai-workbench/internal/config"
 	"github.com/endge-lab/service-ai-workbench/internal/domain/entities"
 	domainerrors "github.com/endge-lab/service-ai-workbench/internal/domain/errors"
 	workbenchusecase "github.com/endge-lab/service-ai-workbench/internal/usecase/workbench"
@@ -16,10 +17,17 @@ import (
 type Server struct {
 	workbenchv1.UnimplementedWorkbenchServiceServer
 	usecase *workbenchusecase.UseCase
+	service string
+	version string
+	env     string
 }
 
-func NewServer(usecase *workbenchusecase.UseCase) *Server {
-	return &Server{usecase: usecase}
+func NewServer(usecase *workbenchusecase.UseCase, cfg *config.Config) *Server {
+	return &Server{usecase: usecase, service: cfg.App.Name, version: cfg.App.Version, env: cfg.App.Env}
+}
+
+func (s *Server) GetServiceInfo(context.Context, *workbenchv1.GetServiceInfoRequest) (*workbenchv1.GetServiceInfoResponse, error) {
+	return &workbenchv1.GetServiceInfoResponse{Service: s.service, Version: s.version, Env: s.env}, nil
 }
 
 func (s *Server) GetCapabilities(context.Context, *workbenchv1.GetCapabilitiesRequest) (*workbenchv1.GetCapabilitiesResponse, error) {

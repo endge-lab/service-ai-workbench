@@ -13,8 +13,12 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
-  go build -trimpath -ldflags="-s -w" -buildvcs=false -o /out/service-ai-workbench ./cmd/main.go
+RUN workbench_version="$(tr -d '[:space:]' < VERSION)" \
+  && echo "$workbench_version" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' \
+  && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+  go build -trimpath \
+  -ldflags="-s -w -X github.com/endge-lab/service-ai-workbench/internal/buildinfo.Version=$workbench_version" \
+  -buildvcs=false -o /out/service-ai-workbench ./cmd/main.go
 
 FROM ${BASE_RUNTIME_IMAGE}
 

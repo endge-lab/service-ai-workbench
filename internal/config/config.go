@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/endge-lab/service-ai-workbench/internal/buildinfo"
 	kitconfig "github.com/endge-lab/service-kit-go/config"
 )
 
@@ -49,6 +50,7 @@ func Load() (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
+	base.App.Version = buildinfo.Resolve(base.App.Version)
 
 	debugEnabled, err := boolFromEnv("AI_DEBUG", false)
 	if err != nil {
