@@ -40,10 +40,18 @@ func newGRPCServer(lifecycle fx.Lifecycle, cfg *config.Config, handler *grpcv1.S
 	} else if cfg.App.IsProduction() {
 		return nil, fmt.Errorf("service identity verification must be enabled in production")
 	}
+	if cfg.App.IsProduction() && !cfg.TLS.Enabled {
+		return nil, fmt.Errorf("grpc TLS must be enabled in production")
+	}
 	server, err := grpckit.NewServer(grpckit.ServerConfig{
 		Address: fmt.Sprintf(":%d", cfg.GRPC.Port), MaxReceiveBytes: cfg.GRPC.MaxReceiveBytes,
 		MaxSendBytes: cfg.GRPC.MaxSendBytes, GracefulStopTimeout: cfg.GRPC.GracefulStopTimeout,
 		KeepaliveTime: cfg.GRPC.KeepaliveTime, KeepaliveTimeout: cfg.GRPC.KeepaliveTimeout,
+		TLS: grpckit.TLSConfig{
+			Enabled:  cfg.TLS.Enabled,
+			CertFile: cfg.TLS.CertFile,
+			KeyFile:  cfg.TLS.KeyFile,
+		},
 	}, serverOptions...)
 	if err != nil {
 		return nil, err

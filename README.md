@@ -15,7 +15,7 @@ Configurator не должен обращаться к Workbench напряму�
 основной backend. Workbench будет отвечать за AI orchestration в рамках явно
 авторизованного запуска.
 
-## Возможности v0.4.0
+## Возможности v0.5.0
 
 - HTTP на Fiber;
 - dependency injection через `fx`;
@@ -27,7 +27,7 @@ Configurator не должен обращаться к Workbench напряму�
 - canonical `workbench.v1` protobuf и standard gRPC Health;
 - service-to-service OIDC authentication;
 - opaque cursor pagination, atomic reset и один active run на conversation;
-- hardcoded streaming adapters `anthropic` и `ollama` без внешних API-вызовов;
+- реальный streaming adapter Ollama через native `/api/chat` и hardcoded adapter Anthropic;
 - локальный `endge-knowledge/v1` bundle и детерминированный поиск по публичной документации;
 - отключённая по умолчанию запись этапов retrieval в `tmp/debug`;
 - `/health` и `/version`;
@@ -106,6 +106,10 @@ AI_CONVERSATION_CONTEXT_MESSAGE_LIMIT=10
 AI_MODEL_CONTEXT_MAX_CHARS=24000
 AI_DEBUG=true
 AI_DEBUG_OUTPUT_PATH=tmp/debug
+AI_OLLAMA_REQUEST_TIMEOUT=2m
+AI_OLLAMA_MAX_RESPONSE_BYTES=8388608
+AI_OLLAMA_ALLOW_PRIVATE_NETWORK=false
+AI_OLLAMA_ALLOW_INSECURE_HTTP=false
 ```
 
 При `AI_DEBUG=true` каждый run создаёт каталог
@@ -115,6 +119,20 @@ AI_DEBUG_OUTPUT_PATH=tmp/debug
 точный provider-neutral `ModelRequest`. Текущий prompt не дублируется в истории.
 При `AI_DEBUG=false` файловая система debug recorder-ом не изменяется. `tmp/`
 целиком исключён из Git.
+
+### Ollama
+
+Для Ollama Cloud connection использует base URL `https://ollama.com`; adapter
+сам добавляет `/api/chat` и передаёт сохранённый credential как Bearer token.
+Для локального Ollama без credential можно указать, например,
+`http://host.docker.internal:11434`, но только при `APP_ENV=development` и двух
+явных флагах `AI_OLLAMA_ALLOW_PRIVATE_NETWORK=true` и
+`AI_OLLAMA_ALLOW_INSECURE_HTTP=true`. В production эти флаги запрещены.
+
+Credential расшифровывается backend только после проверки доступа и передаётся
+внутри одного gRPC `Run`. Workbench не записывает его в PostgreSQL, debug,
+telemetry или сообщения об ошибках. В production gRPC server требует TLS;
+plaintext transport остаётся только для локального development.
 
 ## Архитектура
 

@@ -2,29 +2,30 @@ package llm
 
 import (
 	"context"
-	"reflect"
 	"testing"
 
+	"github.com/endge-lab/service-ai-workbench/internal/config"
 	"github.com/endge-lab/service-ai-workbench/internal/domain/entities"
 )
 
-func TestRegistryExposesBothDeterministicAdapters(t *testing.T) {
-	registry := NewRegistry()
+func TestRegistryExposesOllamaAndAnthropicAdapters(t *testing.T) {
+	registry := NewRegistry(&config.Config{})
 	for _, adapter := range []string{"anthropic", "ollama"} {
-		generator, ok := registry.Resolve(adapter)
+		_, ok := registry.Resolve(adapter)
 		if !ok {
 			t.Fatalf("adapter %q is not registered", adapter)
 		}
-		first, err := generator.Generate(context.Background(), entities.ModelRequest{Model: entities.ModelSnapshot{Adapter: adapter}})
-		if err != nil {
-			t.Fatal(err)
-		}
-		second, err := generator.Generate(context.Background(), entities.ModelRequest{Model: entities.ModelSnapshot{Adapter: adapter}})
-		if err != nil {
-			t.Fatal(err)
-		}
-		if !reflect.DeepEqual(first, second) || len(first) == 0 {
-			t.Fatalf("adapter %q response is not deterministic: %#v / %#v", adapter, first, second)
-		}
+	}
+
+	generator, _ := registry.Resolve("anthropic")
+	chunks := make([]string, 0, 4)
+	err := generator.Generate(context.Background(), entities.GenerationRequest{
+		ModelRequest: entities.ModelRequest{Model: entities.ModelSnapshot{Adapter: "anthropic", DisplayName: "Test"}},
+	}, func(chunk string) error {
+		chunks = append(chunks, chunk)
+		return nil
+	})
+	if err != nil || len(chunks) == 0 {
+		t.Fatalf("anthropic hardcoded adapter failed: chunks=%#v err=%v", chunks, err)
 	}
 }

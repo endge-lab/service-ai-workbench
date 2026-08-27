@@ -19,7 +19,7 @@ type ConversationRepository interface {
 }
 
 type Generator interface {
-	Generate(ctx context.Context, request entities.ModelRequest) ([]string, error)
+	Generate(ctx context.Context, request entities.GenerationRequest, emit func(string) error) error
 }
 
 type GeneratorResolver interface {

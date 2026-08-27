@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 0.5.0
+
+- Ollama adapter выполняет реальный native `/api/chat` streaming-вызов с Bearer credential.
+- Provider access остаётся только в памяти одного run и исключён из persistence и debug artifacts.
+- Outbound Ollama transport запрещает redirects, private/reserved targets и plain HTTP; локальные исключения доступны только в development.
+
 ## 0.4.0
 
 - Версия сервиса вынесена в единый файл `VERSION` и встраивается в локальные и production-сборки.

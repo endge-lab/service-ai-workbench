@@ -94,13 +94,28 @@ func (s *Server) Run(request *workbenchv1.RunRequest, stream workbenchv1.Workben
 		input.HeadRevisionID = snapshot.GetHeadRevisionId()
 		input.SnapshotSHA256 = snapshot.GetSha256()
 	}
+	if providerAccess := request.GetProviderAccess(); providerAccess != nil {
+		input.ProviderAccess = entities.ProviderAccess{
+			ConnectionID: providerAccess.GetConnectionId(),
+			BaseURL:      providerAccess.GetBaseUrl(),
+			Credential:   providerAccess.GetCredential(),
+		}
+	}
+	failedSent := false
 	err := s.usecase.Run(stream.Context(), input, func(event workbenchusecase.Event) error {
-		return stream.Send(&workbenchv1.RunResponse{
+		sendErr := stream.Send(&workbenchv1.RunResponse{
 			Type: eventTypeToProto(event.Type), RunId: event.RunID, MessageId: event.MessageID,
 			Delta: event.Delta, ErrorCode: event.ErrorCode, ErrorMessage: event.ErrorMessage,
 			CreatedAt: timestamppb.New(event.CreatedAt),
 		})
+		if sendErr == nil && event.Type == workbenchusecase.EventFailed {
+			failedSent = true
+		}
+		return sendErr
 	})
+	if err != nil && failedSent {
+		return nil
+	}
 	return mapError(err)
 }
 

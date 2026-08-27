@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
+	"errors"
 	"strconv"
 	"strings"
 	"time"
@@ -203,19 +204,37 @@ func (u *UseCase) Run(ctx context.Context, input entities.RunInput, emit func(Ev
 			ModelRequest:   modelRequest,
 		})
 	}
-	chunks, err := generator.Generate(ctx, modelRequest)
-	if err != nil {
-		fail("failed", "generation_failed", err.Error())
-		_ = emit(Event{Type: EventFailed, RunID: run.ID, ErrorCode: "generation_failed", ErrorMessage: err.Error(), CreatedAt: time.Now().UTC()})
-		return err
-	}
 	var content strings.Builder
-	for _, chunk := range chunks {
+	var streamErr error
+	err = generator.Generate(ctx, entities.GenerationRequest{
+		ModelRequest:   modelRequest,
+		ProviderAccess: input.ProviderAccess,
+	}, func(chunk string) error {
+		if chunk == "" {
+			return nil
+		}
 		content.WriteString(chunk)
-		if err := emit(Event{Type: EventContentDelta, RunID: run.ID, Delta: chunk, CreatedAt: time.Now().UTC()}); err != nil {
-			fail("cancelled", "stream_cancelled", err.Error())
+		streamErr = emit(Event{Type: EventContentDelta, RunID: run.ID, Delta: chunk, CreatedAt: time.Now().UTC()})
+		return streamErr
+	})
+	if err != nil {
+		if streamErr != nil {
+			fail("cancelled", "stream_cancelled", "client stream closed")
+			return streamErr
+		}
+		if errors.Is(err, context.Canceled) {
+			fail("cancelled", "generation_cancelled", "generation was cancelled")
 			return err
 		}
+		message := "AI provider request failed"
+		code := "generation_failed"
+		if errors.Is(err, context.DeadlineExceeded) {
+			message = "AI provider request timed out"
+			code = "generation_timeout"
+		}
+		fail("failed", code, message)
+		_ = emit(Event{Type: EventFailed, RunID: run.ID, ErrorCode: code, ErrorMessage: message, CreatedAt: time.Now().UTC()})
+		return err
 	}
 	message, err := u.repository.CompleteRun(ctx, run.ID, input.ConversationID, content.String())
 	if err != nil {
@@ -242,7 +261,9 @@ func validModel(model entities.ModelSnapshot) bool {
 func validRun(input entities.RunInput) bool {
 	return validUUID(input.RequestID) && validUUID(input.ConversationID) && strings.TrimSpace(input.Prompt) != "" &&
 		strings.TrimSpace(input.Actor.ID) != "" && strings.TrimSpace(input.Workspace.ID) != "" && validModel(input.Model) &&
-		strings.TrimSpace(input.Generation) != "" && strings.TrimSpace(input.SnapshotSHA256) != ""
+		strings.TrimSpace(input.Generation) != "" && strings.TrimSpace(input.SnapshotSHA256) != "" &&
+		input.ProviderAccess.ConnectionID == input.Model.ConnectionID &&
+		(input.Model.Adapter != "ollama" || strings.TrimSpace(input.ProviderAccess.BaseURL) != "")
 }
 
 func validUUID(value string) bool {

@@ -133,6 +133,14 @@ message WorkspaceSnapshot {
   string sha256 = 4;
 }
 
+// ProviderAccess is an ephemeral run credential. Workbench must not persist,
+// log or include it in debug artifacts.
+message ProviderAccess {
+  string connection_id = 1;
+  string base_url = 2;
+  string credential = 3;
+}
+
 message RunRequest {
   string request_id = 1;
   Actor actor = 2;
@@ -141,6 +149,7 @@ message RunRequest {
   string prompt = 5;
   ModelSnapshot model = 6;
   WorkspaceSnapshot snapshot = 7;
+  ProviderAccess provider_access = 8;
 }
 
 enum RunEventType {

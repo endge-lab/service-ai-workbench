@@ -11,6 +11,10 @@ grpc:
   max_receive_bytes: 33554432
   max_send_bytes: 16777216
   graceful_stop_timeout: 10s
+tls:
+  enabled: true
+  cert_file: /run/secrets/workbench-tls.crt
+  key_file: /run/secrets/workbench-tls.key
 logger:
   level: info
 postgres:

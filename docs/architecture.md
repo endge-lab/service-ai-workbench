@@ -8,6 +8,10 @@ Configurator --HTTP/SSE--> service-backend --gRPC/OIDC--> AI Workbench
 
 Backend owns user authorization, AI catalog, encrypted credentials and `ExportLive`. Workbench never opens the backend database and never mutates an Endge domain.
 
+For an authorized run, backend decrypts the selected connection credential and sends ephemeral provider access over the authenticated gRPC call. Workbench keeps it in memory only and excludes it from persistence, debug artifacts, telemetry and client-visible errors.
+
+Production gRPC transport must use TLS in addition to service identity authentication. Plaintext gRPC is a development-only mode.
+
 ## Contract and layers
 
 - Canonical proto: `api/proto/endge/ai/workbench/v1/workbench.proto`.
@@ -29,7 +33,9 @@ Backend generates client stubs from the canonical proto but does not import this
 
 ## v1 adapters
 
-`anthropic` and `ollama` implement the same generator port. Both return deterministic hardcoded chunks and never use credentials or external APIs in v1.
+`anthropic` and `ollama` implement the same streaming generator port. Anthropic remains deterministic and hardcoded. Ollama calls the native streaming `/api/chat` endpoint, forwards a non-empty credential as a Bearer token and emits only assistant content chunks.
+
+Ollama outbound requests do not follow redirects, require HTTPS by default and reject targets resolving to private or reserved networks. Plain HTTP and private-network targets require explicit development-only settings.
 
 ## Knowledge retrieval debug
 
@@ -42,7 +48,7 @@ Backend generates client stubs from the canonical proto but does not import this
 - A deterministic assembler classifies only an intent hint, removes exact duplicate blocks and allocates a character budget between recent complete conversation turns, domain and documentation.
 - The assembler produces one provider-neutral `ModelRequest`: a fixed safety/system prompt, selected history and a structured final user message containing trusted context plus the current request.
 - Character count is the enforced deterministic budget. Token count in debug output is explicitly an approximation until provider-specific tokenizers are introduced.
-- Both hardcoded adapters receive the assembled request but still do not perform external model calls.
+- Both adapters receive the assembled provider-neutral request; only Ollama performs an external model call at this stage.
 - Debug artifacts are best-effort, disabled by default and stored only under a Git-ignored runtime directory.
 
 Vector RAG, tools, revisions and domain mutations remain explicit non-goals.

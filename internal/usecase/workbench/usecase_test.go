@@ -52,14 +52,17 @@ func (r *repositoryStub) FailRun(context.Context, string, string, string, string
 
 type generatorStub struct{}
 
-func (generatorStub) Generate(context.Context, entities.ModelRequest) ([]string, error) {
-	return []string{"hard", "coded"}, nil
+func (generatorStub) Generate(_ context.Context, _ entities.GenerationRequest, emit func(string) error) error {
+	if err := emit("hard"); err != nil {
+		return err
+	}
+	return emit("coded")
 }
 
 type failingGeneratorStub struct{}
 
-func (failingGeneratorStub) Generate(context.Context, entities.ModelRequest) ([]string, error) {
-	return nil, context.Canceled
+func (failingGeneratorStub) Generate(context.Context, entities.GenerationRequest, func(string) error) error {
+	return context.Canceled
 }
 
 type failingResolverStub struct{}
@@ -88,6 +91,7 @@ func TestRunPersistsOnlyCompletedAssistantMessage(t *testing.T) {
 			Adapter: "ollama", ProviderModelID: "llama", DisplayName: "Local",
 		},
 		Snapshot: snapshot, SnapshotSHA256: hex.EncodeToString(digest[:]), Generation: "generation-1",
+		ProviderAccess: entities.ProviderAccess{ConnectionID: "8cfb0256-8125-426d-8f99-974a735ac07a", BaseURL: "https://ollama.com"},
 	}
 	events := make([]Event, 0, 4)
 	if err := usecase.Run(context.Background(), input, func(event Event) error {
@@ -110,7 +114,8 @@ func TestRunRejectsSnapshotChecksumMismatchBeforePersistence(t *testing.T) {
 	input := entities.RunInput{
 		RequestID: "247b2db9-f273-41a0-ae42-4d20c43fc3e0", Actor: entities.Actor{ID: "actor"}, Workspace: entities.Workspace{ID: "workspace"},
 		ConversationID: "49f0ecb7-9389-4926-be55-091d87ab7a82", Prompt: "prompt", Snapshot: []byte("payload"), SnapshotSHA256: "wrong", Generation: "generation-1",
-		Model: entities.ModelSnapshot{ProfileID: "37273431-38ad-418a-9244-46ff3c279b43", ConnectionID: "8cfb0256-8125-426d-8f99-974a735ac07a", Adapter: "ollama", ProviderModelID: "llama", DisplayName: "Local"},
+		Model:          entities.ModelSnapshot{ProfileID: "37273431-38ad-418a-9244-46ff3c279b43", ConnectionID: "8cfb0256-8125-426d-8f99-974a735ac07a", Adapter: "ollama", ProviderModelID: "llama", DisplayName: "Local"},
+		ProviderAccess: entities.ProviderAccess{ConnectionID: "8cfb0256-8125-426d-8f99-974a735ac07a", BaseURL: "https://ollama.com"},
 	}
 	if err := usecase.Run(context.Background(), input, func(Event) error { return nil }); err == nil {
 		t.Fatal("expected checksum mismatch")
@@ -128,7 +133,8 @@ func TestRunFailureDoesNotPersistPartialAssistantMessage(t *testing.T) {
 	input := entities.RunInput{
 		RequestID: "247b2db9-f273-41a0-ae42-4d20c43fc3e0", Actor: entities.Actor{ID: "actor"}, Workspace: entities.Workspace{ID: "workspace"},
 		ConversationID: "49f0ecb7-9389-4926-be55-091d87ab7a82", Prompt: "prompt", Snapshot: snapshot, SnapshotSHA256: hex.EncodeToString(digest[:]), Generation: "generation-1",
-		Model: entities.ModelSnapshot{ProfileID: "37273431-38ad-418a-9244-46ff3c279b43", ConnectionID: "8cfb0256-8125-426d-8f99-974a735ac07a", Adapter: "ollama", ProviderModelID: "llama", DisplayName: "Local"},
+		Model:          entities.ModelSnapshot{ProfileID: "37273431-38ad-418a-9244-46ff3c279b43", ConnectionID: "8cfb0256-8125-426d-8f99-974a735ac07a", Adapter: "ollama", ProviderModelID: "llama", DisplayName: "Local"},
+		ProviderAccess: entities.ProviderAccess{ConnectionID: "8cfb0256-8125-426d-8f99-974a735ac07a", BaseURL: "https://ollama.com"},
 	}
 	if err := usecase.Run(context.Background(), input, func(Event) error { return nil }); err == nil {
 		t.Fatal("expected generator failure")

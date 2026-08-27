@@ -24,6 +24,14 @@ type ModelSnapshot struct {
 	DisplayName     string
 }
 
+// ProviderAccess is ephemeral secret material supplied by the trusted backend
+// for one run. It must never be persisted, logged or added to debug artifacts.
+type ProviderAccess struct {
+	ConnectionID string `json:"connectionId"`
+	BaseURL      string `json:"baseUrl"`
+	Credential   string `json:"-"`
+}
+
 type Conversation struct {
 	ID           string
 	ActorID      string
@@ -55,6 +63,7 @@ type RunInput struct {
 	Generation     string
 	HeadRevisionID string
 	SnapshotSHA256 string
+	ProviderAccess ProviderAccess
 }
 
 type Run struct {
@@ -174,6 +183,11 @@ type ModelRequest struct {
 	Model        ModelSnapshot  `json:"model"`
 	SystemPrompt string         `json:"system"`
 	Messages     []ModelMessage `json:"messages"`
+}
+
+type GenerationRequest struct {
+	ModelRequest   ModelRequest
+	ProviderAccess ProviderAccess
 }
 
 type RunDebugRecord struct {
