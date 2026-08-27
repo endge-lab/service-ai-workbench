@@ -200,7 +200,8 @@ func (r *WorkbenchRepository) StartRun(ctx context.Context, input entities.RunIn
 	if err != nil {
 		return entities.Run{}, mapWriteError("insert run", err)
 	}
-	if _, err := tx.Exec(ctx, `INSERT INTO messages (conversation_id, role, content) VALUES ($1,'user',$2)`, input.ConversationID, input.Prompt); err != nil {
+	if err := tx.QueryRow(ctx, `INSERT INTO messages (conversation_id, role, content) VALUES ($1,'user',$2)
+		RETURNING id, sequence`, input.ConversationID, input.Prompt).Scan(&run.UserMessageID, &run.UserMessageSequence); err != nil {
 		return entities.Run{}, fmt.Errorf("insert user message: %w", err)
 	}
 	if _, err := tx.Exec(ctx, `UPDATE conversations SET updated_at=now() WHERE id=$1`, input.ConversationID); err != nil {

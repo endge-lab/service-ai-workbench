@@ -15,7 +15,7 @@ Configurator не должен обращаться к Workbench напряму�
 основной backend. Workbench будет отвечать за AI orchestration в рамках явно
 авторизованного запуска.
 
-## Возможности v0.2.0
+## Возможности v0.3.0
 
 - HTTP на Fiber;
 - dependency injection через `fx`;
@@ -28,6 +28,8 @@ Configurator не должен обращаться к Workbench напряму�
 - service-to-service OIDC authentication;
 - opaque cursor pagination, atomic reset и один active run на conversation;
 - hardcoded streaming adapters `anthropic` и `ollama` без внешних API-вызовов;
+- локальный `endge-knowledge/v1` bundle и детерминированный поиск по публичной документации;
+- отключённая по умолчанию запись этапов retrieval в `tmp/debug`;
 - `/health` и `/version`;
 - Swagger/Scalar в non-production окружениях;
 - единый JSON-формат ошибок;
@@ -79,6 +81,34 @@ make down
 PostgreSQL и service identity обязательны для штатного v1 flow. Обязательный CORS allowlist указывает
 на зарезервированный `https://cors-disabled.invalid`, поэтому browser-клиенты не
 получают прямой доступ к Workbench.
+
+### Локальная документация и retrieval debug
+
+Workbench не читает Git-репозиторий документации напрямую. Сначала в приложении
+`egorkozelskij-endge-web-configurator-docs` нужно выполнить:
+
+```bash
+pnpm knowledge:build
+```
+
+Затем передать путь к созданному каталогу `dist/knowledge`:
+
+```env
+AI_KNOWLEDGE_BUNDLE_PATH=/absolute/path/to/dist/knowledge
+AI_KNOWLEDGE_MAX_RESULTS=8
+AI_DOMAIN_CONTEXT_MAX_RESULTS=20
+AI_CONVERSATION_CONTEXT_MESSAGE_LIMIT=10
+AI_DEBUG=true
+AI_DEBUG_OUTPUT_PATH=tmp/debug
+```
+
+При `AI_DEBUG=true` каждый run создаёт каталог
+`tmp/debug/<conversation-id>/<UTC-time>_<request-id>/`. Файлы имеют числовые
+префиксы `00`–`05`: metadata, prompt, поисковые выражения, документация,
+выбранный контекст актуального Workspace и последние сообщения до текущего
+prompt. Текущий prompt не дублируется в истории и добавляется к будущему model
+request отдельно. При `AI_DEBUG=false` файловая система debug recorder-ом не
+изменяется. `tmp/` целиком исключён из Git.
 
 ## Архитектура
 

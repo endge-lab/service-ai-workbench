@@ -19,9 +19,21 @@ type ConversationRepository interface {
 }
 
 type Generator interface {
-	Generate(ctx context.Context, prompt string, model entities.ModelSnapshot) ([]string, error)
+	Generate(ctx context.Context, request entities.ModelRequest) ([]string, error)
 }
 
 type GeneratorResolver interface {
 	Resolve(adapter string) (Generator, bool)
+}
+
+type KnowledgeRetriever interface {
+	Retrieve(ctx context.Context, prompt string, limit int) entities.KnowledgeRetrieval
+}
+
+type DomainContextSelector interface {
+	Select(ctx context.Context, snapshot []byte, query entities.KnowledgeSearchQuery, limit int) entities.DomainContext
+}
+
+type RunDebugRecorder interface {
+	Record(ctx context.Context, record entities.RunDebugRecord)
 }

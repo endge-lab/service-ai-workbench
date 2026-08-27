@@ -33,12 +33,39 @@ type Event struct {
 }
 
 type UseCase struct {
-	repository ports.ConversationRepository
-	generators ports.GeneratorResolver
+	repository          ports.ConversationRepository
+	generators          ports.GeneratorResolver
+	knowledge           ports.KnowledgeRetriever
+	domain              ports.DomainContextSelector
+	debug               ports.RunDebugRecorder
+	contextMessageLimit int
+	contextMaxChars     int
 }
 
-func NewUseCase(repository ports.ConversationRepository, generators ports.GeneratorResolver) *UseCase {
-	return &UseCase{repository: repository, generators: generators}
+type Dependencies struct {
+	Knowledge           ports.KnowledgeRetriever
+	Domain              ports.DomainContextSelector
+	Debug               ports.RunDebugRecorder
+	ContextMessageLimit int
+	ContextMaxChars     int
+}
+
+func NewUseCase(repository ports.ConversationRepository, generators ports.GeneratorResolver, dependencies ...Dependencies) *UseCase {
+	useCase := &UseCase{repository: repository, generators: generators}
+	if len(dependencies) > 0 {
+		useCase.knowledge = dependencies[0].Knowledge
+		useCase.domain = dependencies[0].Domain
+		useCase.debug = dependencies[0].Debug
+		useCase.contextMessageLimit = dependencies[0].ContextMessageLimit
+		useCase.contextMaxChars = dependencies[0].ContextMaxChars
+	}
+	if useCase.contextMessageLimit < 1 {
+		useCase.contextMessageLimit = 10
+	}
+	if useCase.contextMaxChars < 1 {
+		useCase.contextMaxChars = 24000
+	}
+	return useCase
 }
 
 func (u *UseCase) Capabilities() []string { return []string{"anthropic", "ollama"} }
@@ -116,14 +143,67 @@ func (u *UseCase) Run(ctx context.Context, input entities.RunInput, emit func(Ev
 	if err != nil {
 		return err
 	}
+	startedAt := time.Now().UTC()
 	fail := func(status, code, message string) {
 		_ = u.repository.FailRun(context.WithoutCancel(ctx), run.ID, status, code, message)
 	}
-	if err := emit(Event{Type: EventStarted, RunID: run.ID, CreatedAt: time.Now().UTC()}); err != nil {
+	if err := emit(Event{Type: EventStarted, RunID: run.ID, CreatedAt: startedAt}); err != nil {
 		fail("cancelled", "stream_cancelled", err.Error())
 		return err
 	}
-	chunks, err := generator.Generate(ctx, input.Prompt, input.Model)
+	retrieval := entities.KnowledgeRetrieval{}
+	if u.knowledge != nil {
+		retrieval = u.knowledge.Retrieve(ctx, input.Prompt, 0)
+	}
+	domainContext := entities.DomainContext{}
+	if u.domain != nil {
+		domainContext = u.domain.Select(ctx, input.Snapshot, retrieval.Query, 0)
+	}
+	conversationContext := entities.ConversationContext{
+		Limit:          u.contextMessageLimit,
+		BeforeSequence: run.UserMessageSequence,
+		Messages:       []entities.Message{},
+	}
+	previousMessages, _, contextErr := u.repository.ListMessages(
+		ctx,
+		input.Actor.ID,
+		input.Workspace.ID,
+		input.ConversationID,
+		u.contextMessageLimit,
+		&run.UserMessageSequence,
+	)
+	if contextErr != nil {
+		conversationContext.Error = contextErr.Error()
+	} else {
+		conversationContext.Messages = previousMessages
+	}
+	modelRequest, contextPlan := assembleModelRequest(
+		input,
+		retrieval,
+		domainContext,
+		conversationContext,
+		u.contextMaxChars,
+	)
+	if u.debug != nil {
+		u.debug.Record(ctx, entities.RunDebugRecord{
+			RequestID:      input.RequestID,
+			RunID:          run.ID,
+			ConversationID: input.ConversationID,
+			ActorID:        input.Actor.ID,
+			WorkspaceID:    input.Workspace.ID,
+			Prompt:         input.Prompt,
+			Generation:     input.Generation,
+			HeadRevisionID: input.HeadRevisionID,
+			SnapshotSHA256: input.SnapshotSHA256,
+			StartedAt:      startedAt,
+			Knowledge:      retrieval,
+			Domain:         domainContext,
+			Conversation:   conversationContext,
+			ContextPlan:    contextPlan,
+			ModelRequest:   modelRequest,
+		})
+	}
+	chunks, err := generator.Generate(ctx, modelRequest)
 	if err != nil {
 		fail("failed", "generation_failed", err.Error())
 		_ = emit(Event{Type: EventFailed, RunID: run.ID, ErrorCode: "generation_failed", ErrorMessage: err.Error(), CreatedAt: time.Now().UTC()})

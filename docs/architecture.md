@@ -31,4 +31,15 @@ Backend generates client stubs from the canonical proto but does not import this
 
 `anthropic` and `ollama` implement the same generator port. Both return deterministic hardcoded chunks and never use credentials or external APIs in v1.
 
-RAG, embeddings, tools, revisions and domain mutations are explicit non-goals.
+## Knowledge retrieval debug
+
+- Configurator documentation owns the immutable `endge-knowledge/v1` bundle.
+- Workbench loads a local bundle path and never reads the documentation Git repository.
+- Initial retrieval is deterministic lexical ranking without embeddings or a vector database.
+- The same normalized query selects matching documents from the trusted `ExportLive` snapshot and then adds one-hop documents that reference a selected identity.
+- Domain context always carries sanitized Workspace metadata and installed integrations; credential-like fields are redacted before debug output.
+- Conversation context takes the latest messages whose monotonic sequence is lower than the current user message sequence, so the current prompt cannot be duplicated.
+- Retrieved documentation, domain context and conversation context do not yet modify the hardcoded model request; they are recorded only for inspection.
+- Debug artifacts are best-effort, disabled by default and stored only under a Git-ignored runtime directory.
+
+Vector RAG, tools, revisions and domain mutations remain explicit non-goals.

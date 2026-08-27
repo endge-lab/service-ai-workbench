@@ -34,7 +34,12 @@ func (r *repositoryStub) ListMessages(context.Context, string, string, string, i
 }
 func (r *repositoryStub) StartRun(_ context.Context, input entities.RunInput) (entities.Run, error) {
 	r.started = input
-	return entities.Run{ID: "87e5e523-5555-4ed3-a85d-e9f2234c7e88", RequestID: input.RequestID}, nil
+	return entities.Run{
+		ID:                  "87e5e523-5555-4ed3-a85d-e9f2234c7e88",
+		RequestID:           input.RequestID,
+		UserMessageID:       "b31be9b8-61d6-449b-bef7-49a874ce4778",
+		UserMessageSequence: 1,
+	}, nil
 }
 func (r *repositoryStub) CompleteRun(_ context.Context, _, conversationID, content string) (entities.Message, error) {
 	r.completed = content
@@ -47,13 +52,13 @@ func (r *repositoryStub) FailRun(context.Context, string, string, string, string
 
 type generatorStub struct{}
 
-func (generatorStub) Generate(context.Context, string, entities.ModelSnapshot) ([]string, error) {
+func (generatorStub) Generate(context.Context, entities.ModelRequest) ([]string, error) {
 	return []string{"hard", "coded"}, nil
 }
 
 type failingGeneratorStub struct{}
 
-func (failingGeneratorStub) Generate(context.Context, string, entities.ModelSnapshot) ([]string, error) {
+func (failingGeneratorStub) Generate(context.Context, entities.ModelRequest) ([]string, error) {
 	return nil, context.Canceled
 }
 

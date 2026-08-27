@@ -15,11 +15,11 @@ func TestRegistryExposesBothDeterministicAdapters(t *testing.T) {
 		if !ok {
 			t.Fatalf("adapter %q is not registered", adapter)
 		}
-		first, err := generator.Generate(context.Background(), "prompt", entities.ModelSnapshot{Adapter: adapter})
+		first, err := generator.Generate(context.Background(), entities.ModelRequest{Model: entities.ModelSnapshot{Adapter: adapter}})
 		if err != nil {
 			t.Fatal(err)
 		}
-		second, err := generator.Generate(context.Background(), "different prompt", entities.ModelSnapshot{Adapter: adapter})
+		second, err := generator.Generate(context.Background(), entities.ModelRequest{Model: entities.ModelSnapshot{Adapter: adapter}})
 		if err != nil {
 			t.Fatal(err)
 		}

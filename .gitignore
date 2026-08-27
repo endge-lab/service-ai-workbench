@@ -1,3 +1,4 @@
+# Runtime diagnostics may contain prompts and retrieved project context.
 tmp/
 main
 .DS_Store

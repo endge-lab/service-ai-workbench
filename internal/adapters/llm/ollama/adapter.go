@@ -10,6 +10,6 @@ type Adapter struct{}
 
 func New() *Adapter { return &Adapter{} }
 
-func (a *Adapter) Generate(ctx context.Context, prompt string, model entities.ModelSnapshot) ([]string, error) {
-	return []string{"AI Workbench принял запрос через Ollama-профиль «", model.DisplayName, "». ", "Модельный вызов пока отключён; работает тестовый потоковый ответ."}, nil
+func (a *Adapter) Generate(ctx context.Context, request entities.ModelRequest) ([]string, error) {
+	return []string{"AI Workbench принял запрос через Ollama-профиль «", request.Model.DisplayName, "». ", "Модельный вызов пока отключён; работает тестовый потоковый ответ."}, nil
 }

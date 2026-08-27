@@ -11,7 +11,7 @@ import (
 )
 
 func TestNewRedpandaClientDisabled(t *testing.T) {
-	client := NewRedpandaClient(&config.Config{}, zap.NewNop())
+	client := NewRedpandaClient(&config.Config{ServiceConfig: &config.BaseConfig{}}, zap.NewNop())
 
 	if client.Enabled() {
 		t.Fatal("expected client to be disabled")
@@ -28,13 +28,15 @@ func TestNewRedpandaClientDisabled(t *testing.T) {
 
 func TestNewRedpandaClientBuildsReaderAndWriter(t *testing.T) {
 	client := NewRedpandaClient(&config.Config{
-		Redpanda: config.RedpandaConfig{
-			Enabled:          true,
-			Brokers:          "broker-a:9092, broker-b:9092",
-			ClientID:         "service-ai-workbench",
-			DialTimeout:      4 * time.Second,
-			ReadBatchTimeout: 1500 * time.Millisecond,
-			WriteTimeout:     12 * time.Second,
+		ServiceConfig: &config.BaseConfig{
+			Redpanda: config.RedpandaConfig{
+				Enabled:          true,
+				Brokers:          "broker-a:9092, broker-b:9092",
+				ClientID:         "service-ai-workbench",
+				DialTimeout:      4 * time.Second,
+				ReadBatchTimeout: 1500 * time.Millisecond,
+				WriteTimeout:     12 * time.Second,
+			},
 		},
 	}, zap.NewNop())
 
