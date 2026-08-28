@@ -1,11 +1,15 @@
 package preparation
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
+	"io"
 	"strings"
 
 	"github.com/endge-lab/service-ai-workbench/internal/domain/entities"
+	"github.com/endge-lab/service-ai-workbench/internal/usecase/modelcalls"
 	"github.com/endge-lab/service-ai-workbench/internal/usecase/ports"
 )
 
@@ -23,8 +27,16 @@ func (v *ResponseValidator) Validate(ctx context.Context, input entities.RunInpu
 	if validation.Valid || hasFatalValidationError(validation.Errors) || !hasSchemaValidationError(validation.Errors) {
 		return validation, nil, nil
 	}
+	// Final-response repair is a validation concern, not a preparation call. Give
+	// it an independent one-call budget so a legitimate Planner/Reranker chain
+	// cannot consume the only opportunity to make a weak model schema-compliant.
+	repairContext := modelcalls.WithBudget(ctx, 1)
 	budget := &modelCallBudget{limit: 1}
-	repaired, usages, err := repairStructured(ctx, v.prompts, v.models, input, raw, strings.Join(validation.Errors, "; "), budget)
+	expectedSchema := entities.FinalAnswerSchema
+	if preparation.ModelRequest != nil && len(preparation.ModelRequest.ResponseFormat) > 0 {
+		expectedSchema = preparation.ModelRequest.ResponseFormat
+	}
+	repaired, usages, err := repairStructured(repairContext, v.prompts, v.models, input, raw, expectedSchema, validation.Errors, budget)
 	if err != nil {
 		return validation, usages, err
 	}
@@ -35,7 +47,7 @@ func (v *ResponseValidator) Validate(ctx context.Context, input entities.RunInpu
 
 func hasSchemaValidationError(errors []string) bool {
 	for _, code := range errors {
-		if code == "response_schema_invalid" {
+		if strings.HasPrefix(code, "response_schema_invalid") {
 			return true
 		}
 	}
@@ -44,8 +56,14 @@ func hasSchemaValidationError(errors []string) bool {
 
 func validateStructuredResponse(raw []byte, preparation entities.PreparationResult) entities.ResponseValidation {
 	result := entities.ResponseValidation{}
-	if err := json.Unmarshal(extractJSONObject(raw), &result.Response); err != nil {
-		result.Errors = append(result.Errors, "response_schema_invalid")
+	var response entities.StructuredResponse
+	if err := decodeStrictJSON(extractJSONObject(raw), &response); err != nil {
+		result.Errors = append(result.Errors, "response_schema_invalid: "+err.Error())
+		return result
+	}
+	result.Response = response
+	if result.Response.EntityCitations == nil || result.Response.DocumentationCitations == nil || result.Response.Limitations == nil {
+		result.Errors = append(result.Errors, "response_schema_invalid: citation and limitation arrays are required")
 		return result
 	}
 	if strings.TrimSpace(result.Response.Answer) == "" {
@@ -53,10 +71,8 @@ func validateStructuredResponse(raw []byte, preparation entities.PreparationResu
 	}
 	allowedEntities := map[string]struct{}{}
 	allowedDocs := map[string]struct{}{}
-	for _, task := range preparation.Plan.Tasks {
-		if task.ResolvedEntity != nil {
-			allowedEntities[task.ResolvedEntity.DocumentType+"\x00"+task.ResolvedEntity.Identity] = struct{}{}
-		}
+	for _, citation := range allowedEntityCitations(preparation.Plan, preparation.Trace.Blocks) {
+		allowedEntities[citation.DocumentType+"\x00"+citation.Identity] = struct{}{}
 	}
 	for _, block := range preparation.Trace.Blocks {
 		if block.SourceKind == "documentation" {
@@ -88,6 +104,22 @@ func validateStructuredResponse(raw []byte, preparation entities.PreparationResu
 	}
 	result.Valid = len(result.Errors) == 0
 	return result
+}
+
+func decodeStrictJSON(raw []byte, target any) error {
+	decoder := json.NewDecoder(bytes.NewReader(raw))
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(target); err != nil {
+		return err
+	}
+	var trailing any
+	if err := decoder.Decode(&trailing); err != io.EOF {
+		if err == nil {
+			return fmt.Errorf("multiple JSON values")
+		}
+		return err
+	}
+	return nil
 }
 
 func hasFatalValidationError(errors []string) bool {

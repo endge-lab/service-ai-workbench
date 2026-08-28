@@ -2,6 +2,8 @@ package preparation
 
 import (
 	"context"
+	"encoding/json"
+	"strings"
 	"testing"
 
 	"github.com/endge-lab/service-ai-workbench/internal/domain/entities"
@@ -145,5 +147,33 @@ func TestMandatoryContextMustFitBudget(t *testing.T) {
 	all := []entities.RetrievedBlock{{SourceKind: "domain", SourceKey: "one", Mandatory: true, Content: "12345"}}
 	if allMandatoryBlocksFit(all, fitBlocks(all, 4)) {
 		t.Fatal("mandatory block outside budget must fail")
+	}
+}
+
+func TestListContextUsesOneCompactMandatoryBlock(t *testing.T) {
+	coordinator := &Coordinator{domainDocumentMaxChars: 1000}
+	task := entities.PlannedTask{ID: "task-1", Intent: entities.IntentListEntities, ExpectedTypes: []string{"compositions"}}
+	trace := entities.PreparationTrace{}
+	coordinator.addDomainBlocks(&task, entities.DomainContext{TotalDocuments: 2, Matches: []entities.DomainContextMatch{
+		{DocumentType: "compositions", Identity: "page-a", Summary: []byte(`{"identity":"page-a","displayName":"Page A"}`), Snapshot: []byte(`{"identity":"page-a","source":"very large source"}`)},
+		{DocumentType: "compositions", Identity: "page-b", Summary: []byte(`{"identity":"page-b","displayName":"Page B"}`), Snapshot: []byte(`{"identity":"page-b","source":"very large source"}`)},
+	}}, entities.TaskPlan{Tasks: []entities.PlannedTask{task}}, &trace)
+	if len(trace.Blocks) != 1 || !trace.Blocks[0].Mandatory || len(trace.Blocks[0].Content) > 500 || trace.Blocks[0].SourceKey != "list/task-1" {
+		t.Fatalf("list context is not compact: %#v", trace.Blocks)
+	}
+}
+
+func TestLargeDomainSnapshotIsCompactedAsValidJSON(t *testing.T) {
+	raw := []byte(`{"identity":"sample","source":"` + strings.Repeat("x", 20000) + `","items":[1,2,3,4,5,6,7,8,9,10]}`)
+	compacted, truncated := compactDomainSnapshot(raw, 2000)
+	if !truncated || len(compacted) > 2000 || !json.Valid(compacted) {
+		t.Fatalf("snapshot was not safely compacted: truncated=%v length=%d", truncated, len(compacted))
+	}
+}
+
+func TestResponseValidationRejectsUnknownStructuredFields(t *testing.T) {
+	validation := validateStructuredResponse([]byte(`{"answer":"ok","entityCitations":[],"documentationCitations":[],"limitations":[],"unexpected":true}`), entities.PreparationResult{})
+	if validation.Valid || !hasSchemaValidationError(validation.Errors) {
+		t.Fatalf("unknown response fields must be rejected: %#v", validation)
 	}
 }

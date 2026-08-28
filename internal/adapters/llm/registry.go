@@ -41,9 +41,10 @@ func (r *Registry) Invoke(ctx context.Context, request ports.StructuredModelRequ
 	var output strings.Builder
 	err := generator.Generate(ctx, entities.GenerationRequest{
 		ModelRequest: entities.ModelRequest{
-			Model:        request.Model,
-			SystemPrompt: request.SystemPrompt,
-			Messages:     []entities.ModelMessage{{Role: "user", Content: request.UserPrompt}},
+			Model:          request.Model,
+			SystemPrompt:   request.SystemPrompt,
+			Messages:       []entities.ModelMessage{{Role: "user", Content: request.UserPrompt}},
+			ResponseFormat: request.ResponseFormat,
 		},
 		ProviderAccess: request.ProviderAccess,
 	}, func(chunk string) error {

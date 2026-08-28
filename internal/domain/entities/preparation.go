@@ -25,6 +25,7 @@ const (
 type NormalizedRequest struct {
 	OriginalText       string   `json:"originalText"`
 	NormalizedText     string   `json:"normalizedText"`
+	Tokens             []string `json:"tokens"`
 	QuotedMentions     []string `json:"quotedMentions"`
 	IdentityLikeTokens []string `json:"identityLikeTokens"`
 	CommandTokens      []string `json:"commandTokens"`
@@ -35,6 +36,7 @@ type ResolvedEntity struct {
 	DocumentType string          `json:"documentType"`
 	Identity     string          `json:"identity"`
 	DisplayName  string          `json:"displayName"`
+	Summary      json.RawMessage `json:"summary,omitempty"`
 	Snapshot     json.RawMessage `json:"snapshot"`
 	SnapshotHash string          `json:"snapshotSha256"`
 }

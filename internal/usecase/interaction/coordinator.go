@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"strings"
+	"unicode"
 
 	"github.com/endge-lab/service-ai-workbench/internal/domain/entities"
 	domainerrors "github.com/endge-lab/service-ai-workbench/internal/domain/errors"
@@ -41,6 +42,11 @@ func (c *Coordinator) StartOrResume(ctx context.Context, input entities.RunInput
 	}
 	if clarification == nil || clarification.ID != input.ReplyToClarificationID || clarification.InteractionID != current.ID {
 		return entities.Interaction{}, domainerrors.ErrConflict
+	}
+	if input.SelectedCandidateID == "" {
+		if selected, ok := candidateFromFreeText(input.Prompt, clarification.Candidates); ok {
+			input.SelectedCandidateID = selected
+		}
 	}
 
 	kind, err := c.classify(ctx, input, *clarification)
@@ -81,6 +87,49 @@ func (c *Coordinator) StartOrResume(ctx context.Context, input entities.RunInput
 		return entities.Interaction{}, err
 	}
 	return updated, nil
+}
+
+func candidateFromFreeText(answer string, candidates []entities.ClarificationCandidate) (string, bool) {
+	normalizedAnswer := normalizeCandidateText(answer)
+	if normalizedAnswer == "" {
+		return "", false
+	}
+	selected := ""
+	for _, candidate := range candidates {
+		matched := false
+		for _, value := range []string{candidate.Identity, candidate.DisplayName} {
+			normalizedValue := normalizeCandidateText(value)
+			if len([]rune(normalizedValue)) >= 4 && (normalizedAnswer == normalizedValue || strings.Contains(normalizedAnswer, normalizedValue)) {
+				matched = true
+				break
+			}
+		}
+		if !matched {
+			continue
+		}
+		if selected != "" && selected != candidate.CandidateID {
+			return "", false
+		}
+		selected = candidate.CandidateID
+	}
+	return selected, selected != ""
+}
+
+func normalizeCandidateText(value string) string {
+	value = strings.Map(func(character rune) rune {
+		switch character {
+		case 'Ё', 'ё':
+			return 'е'
+		case '-', '_':
+			return ' '
+		default:
+			if unicode.IsLetter(character) || unicode.IsDigit(character) {
+				return unicode.ToLower(character)
+			}
+			return ' '
+		}
+	}, value)
+	return strings.Join(strings.Fields(value), " ")
 }
 
 func (c *Coordinator) startNew(ctx context.Context, input entities.RunInput, run entities.Run) (entities.Interaction, error) {
@@ -136,7 +185,7 @@ func (c *Coordinator) classify(ctx context.Context, input entities.RunInput, cla
 	if err := modelcalls.Consume(ctx); err != nil {
 		return "unclear", err
 	}
-	raw, err := c.models.Invoke(ctx, ports.StructuredModelRequest{Model: input.Model, ProviderAccess: input.ProviderAccess, SystemPrompt: system.Content, UserPrompt: request.Content})
+	raw, err := c.models.Invoke(ctx, ports.StructuredModelRequest{Model: input.Model, ProviderAccess: input.ProviderAccess, SystemPrompt: system.Content, UserPrompt: request.Content, ResponseFormat: entities.ClarificationClassifierSchema})
 	if err != nil {
 		return "answer", nil
 	}
@@ -166,7 +215,12 @@ func applyClarification(plan *entities.TaskPlan, clarification entities.Clarific
 		if input.SelectedCandidateID != "" {
 			for _, candidate := range clarification.Candidates {
 				if candidate.CandidateID == input.SelectedCandidateID {
-					task.ResolvedEntity = &entities.ResolvedEntity{DocumentType: candidate.DocumentType, Identity: candidate.Identity, DisplayName: candidate.DisplayName}
+					task.ResolvedEntity = &entities.ResolvedEntity{
+						DocumentType: candidate.DocumentType,
+						Identity:     candidate.Identity,
+						DisplayName:  candidate.DisplayName,
+						Snapshot:     candidate.Snapshot,
+					}
 					task.Status = "resolved"
 					task.Candidates = nil
 					task.UnresolvedSlot = ""

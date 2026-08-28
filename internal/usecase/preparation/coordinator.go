@@ -21,17 +21,18 @@ type Input struct {
 }
 
 type Coordinator struct {
-	normalizer Normalizer
-	planner    Planner
-	router     SourceRouter
-	resolver   Resolver
-	adequacy   ContextAdequacyValidator
-	assembler  ModelRequestAssembler
-	knowledge  ports.KnowledgeRetriever
-	domain     ports.DomainContextSelector
-	prompts    ports.PromptCatalog
-	models     ports.StructuredModelInvoker
-	maxCalls   int
+	normalizer             Normalizer
+	planner                Planner
+	router                 SourceRouter
+	resolver               Resolver
+	adequacy               ContextAdequacyValidator
+	assembler              ModelRequestAssembler
+	knowledge              ports.KnowledgeRetriever
+	domain                 ports.DomainContextSelector
+	prompts                ports.PromptCatalog
+	models                 ports.StructuredModelInvoker
+	maxCalls               int
+	domainDocumentMaxChars int
 }
 
 func NewCoordinator(
@@ -46,6 +47,7 @@ func NewCoordinator(
 		resolver: NewResolver(prompts, models, cfg.Preparation.MaxCandidates, cfg.Preparation.RerankerMinConfidence),
 		adequacy: NewContextAdequacyValidator(cfg.Context.ModelMaxChars), assembler: NewModelRequestAssembler(prompts),
 		knowledge: knowledge, domain: domain, prompts: prompts, models: models, maxCalls: cfg.Preparation.MaxModelCalls,
+		domainDocumentMaxChars: min(12000, cfg.Context.ModelMaxChars/2),
 	}
 }
 
@@ -99,14 +101,14 @@ func (c *Coordinator) Prepare(ctx context.Context, input Input) (entities.Prepar
 				continue
 			}
 			queryText := strings.Join(task.Mentions, " ")
+			folderIdentity := resolvedFolderIdentity(*task, plan)
 			if task.ResolvedEntity != nil {
 				queryText = task.ResolvedEntity.Identity
-			} else if folderIdentity := resolvedFolderIdentity(*task, plan); folderIdentity != "" {
-				queryText = folderIdentity
 			}
 			selected := c.domain.Select(ctx, entities.DomainSelectionInput{
 				WorkspaceID: input.RunInput.Workspace.ID, Generation: input.RunInput.Generation,
 				SnapshotSHA256: input.RunInput.SnapshotSHA256, Snapshot: input.RunInput.Snapshot, Query: domainSearchQuery(queryText),
+				ExpectedTypes: task.ExpectedTypes, FolderIdentity: folderIdentity, IncludeAll: task.Intent == entities.IntentListEntities,
 			})
 			domainContext = mergeDomain(domainContext, selected)
 			clarification, err := c.resolver.Resolve(ctx, input.RunInput, task, selected, budget, &trace)
@@ -147,14 +149,14 @@ func (c *Coordinator) retrieveDocumentation(ctx context.Context, input entities.
 		query = input.Prompt
 	}
 	result := c.knowledge.Retrieve(ctx, query, 0)
-	if len(result.Matches) > 0 || !result.Available {
+	if !knowledgeNeedsExpansion(result) || !result.Available {
 		return result, nil
 	}
 	payload, err := json.Marshal(map[string]any{"request": input.Prompt, "task": task})
 	if err != nil {
 		return result, err
 	}
-	raw, usages, err := invokeStructured(ctx, c.prompts, c.models, input, entities.PromptQueryExpanderSystem, entities.PromptQueryExpanderRequest, payload, budget)
+	raw, usages, err := invokeStructured(ctx, c.prompts, c.models, input, entities.PromptQueryExpanderSystem, entities.PromptQueryExpanderRequest, payload, entities.QueryExpansionSchema, budget)
 	trace.PromptUsage = append(trace.PromptUsage, usages...)
 	trace.ModelCalls = budget.used
 	if err != nil {
@@ -170,20 +172,100 @@ func (c *Coordinator) retrieveDocumentation(ctx context.Context, input entities.
 	if len(expanded.Queries) > 5 {
 		expanded.Queries = expanded.Queries[:5]
 	}
-	return c.knowledge.Retrieve(ctx, strings.Join(expanded.Queries, " "), 0), nil
+	expandedResult := c.knowledge.Retrieve(ctx, strings.Join(append([]string{query}, expanded.Queries...), " "), 0)
+	if expandedResult.BestScore > result.BestScore || expandedResult.Coverage > result.Coverage {
+		return expandedResult, nil
+	}
+	return result, nil
+}
+
+func knowledgeNeedsExpansion(result entities.KnowledgeRetrieval) bool {
+	return len(result.Matches) == 0 || result.BestScore < 20 || (result.BestScore < 35 && result.Coverage < 0.5)
 }
 
 func (c *Coordinator) addDomainBlocks(task *entities.PlannedTask, domain entities.DomainContext, plan entities.TaskPlan, trace *entities.PreparationTrace) {
 	if task.ResolvedEntity != nil {
-		content, _ := json.Marshal(task.ResolvedEntity)
+		contentValue := map[string]any{
+			"documentType": task.ResolvedEntity.DocumentType,
+			"identity":     task.ResolvedEntity.Identity,
+			"displayName":  task.ResolvedEntity.DisplayName,
+		}
+		if task.Intent == entities.IntentInspectEntity {
+			compacted, truncated := compactDomainSnapshot(task.ResolvedEntity.Snapshot, c.domainDocumentMaxChars)
+			contentValue["document"] = compacted
+			if truncated {
+				contentValue["truncated"] = true
+			}
+		} else if len(task.ResolvedEntity.Summary) > 0 {
+			contentValue["summary"] = json.RawMessage(task.ResolvedEntity.Summary)
+		}
+		content, _ := json.Marshal(contentValue)
 		trace.Blocks = append(trace.Blocks, entities.RetrievedBlock{SourceKind: "domain", SourceKey: task.ResolvedEntity.DocumentType + "/" + task.ResolvedEntity.Identity, TaskIDs: []string{task.ID}, Score: 100, Mandatory: true, Content: string(content)})
+		return
+	}
+	if task.Intent == entities.IntentListEntities {
+		items := make([]json.RawMessage, 0, len(domain.Matches))
+		for _, match := range domain.Matches {
+			if !matchesFolderScope(match, task.FolderMention, task, plan) {
+				continue
+			}
+			if len(match.Summary) > 0 {
+				items = append(items, match.Summary)
+			}
+		}
+		content, _ := json.Marshal(map[string]any{"total": domain.TotalDocuments, "returned": len(items), "items": items})
+		trace.Blocks = append(trace.Blocks, entities.RetrievedBlock{SourceKind: "domain", SourceKey: "list/" + task.ID, TaskIDs: []string{task.ID}, Score: 100, Mandatory: true, Content: string(content)})
 		return
 	}
 	for _, match := range domain.Matches {
 		if !matchesFolderScope(match, task.FolderMention, task, plan) {
 			continue
 		}
-		trace.Blocks = append(trace.Blocks, entities.RetrievedBlock{SourceKind: "domain", SourceKey: match.DocumentType + "/" + match.Identity, TaskIDs: []string{task.ID}, Score: float64(match.Score), Mandatory: task.Intent == entities.IntentListEntities, Content: string(match.Snapshot)})
+		trace.Blocks = append(trace.Blocks, entities.RetrievedBlock{SourceKind: "domain", SourceKey: match.DocumentType + "/" + match.Identity, TaskIDs: []string{task.ID}, Score: float64(match.Score), Mandatory: false, Content: string(match.Summary)})
+	}
+}
+
+func compactDomainSnapshot(raw json.RawMessage, maxChars int) (json.RawMessage, bool) {
+	if len(raw) <= maxChars {
+		return raw, false
+	}
+	var value any
+	if json.Unmarshal(raw, &value) != nil {
+		return json.RawMessage(`null`), true
+	}
+	for _, limits := range [][2]int{{4096, 20}, {2048, 10}, {1024, 5}, {512, 3}, {256, 1}} {
+		compacted := compactJSONValue(value, limits[0], limits[1])
+		encoded, err := json.Marshal(compacted)
+		if err == nil && len(encoded) <= maxChars {
+			return encoded, true
+		}
+	}
+	return json.RawMessage(`{"truncated":true}`), true
+}
+
+func compactJSONValue(value any, maxStringRunes, maxArrayItems int) any {
+	switch typed := value.(type) {
+	case map[string]any:
+		result := make(map[string]any, len(typed))
+		for key, item := range typed {
+			result[key] = compactJSONValue(item, maxStringRunes, maxArrayItems)
+		}
+		return result
+	case []any:
+		limit := min(len(typed), maxArrayItems)
+		result := make([]any, 0, limit)
+		for _, item := range typed[:limit] {
+			result = append(result, compactJSONValue(item, maxStringRunes, maxArrayItems))
+		}
+		return result
+	case string:
+		characters := []rune(typed)
+		if len(characters) > maxStringRunes {
+			return string(characters[:maxStringRunes]) + "…"
+		}
+		return typed
+	default:
+		return value
 	}
 }
 
@@ -223,7 +305,7 @@ func filterExpectedTypes(matches []entities.DomainContextMatch, expected []strin
 }
 
 func setResolved(task *entities.PlannedTask, match entities.DomainContextMatch, snapshotHash string) {
-	task.ResolvedEntity = &entities.ResolvedEntity{DocumentType: match.DocumentType, Identity: match.Identity, DisplayName: match.DisplayName, Snapshot: match.Snapshot, SnapshotHash: snapshotHash}
+	task.ResolvedEntity = &entities.ResolvedEntity{DocumentType: match.DocumentType, Identity: match.Identity, DisplayName: match.DisplayName, Summary: match.Summary, Snapshot: match.Snapshot, SnapshotHash: snapshotHash}
 	task.Candidates = nil
 	task.UnresolvedSlot = ""
 	task.Status = "resolved"
@@ -336,6 +418,9 @@ func matchesFolderScope(match entities.DomainContextMatch, folderMention string,
 	}
 	if folderIdentity == "" {
 		return false
+	}
+	if match.FolderIdentity != "" {
+		return match.FolderIdentity == folderIdentity
 	}
 	var value map[string]any
 	if json.Unmarshal(match.Snapshot, &value) != nil {

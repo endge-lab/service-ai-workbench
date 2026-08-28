@@ -50,7 +50,7 @@ func (r Resolver) Resolve(ctx context.Context, input entities.RunInput, task *en
 	if err != nil {
 		return nil, err
 	}
-	raw, usages, err := invokeStructured(ctx, r.prompts, r.models, input, entities.PromptRerankerSystem, entities.PromptRerankerRequest, payload, budget)
+	raw, usages, err := invokeStructured(ctx, r.prompts, r.models, input, entities.PromptRerankerSystem, entities.PromptRerankerRequest, payload, entities.RerankerSchema, budget)
 	trace.PromptUsage = append(trace.PromptUsage, usages...)
 	trace.ModelCalls = budget.used
 	if err == nil {

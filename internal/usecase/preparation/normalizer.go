@@ -22,6 +22,7 @@ func (Normalizer) Normalize(text string) entities.NormalizedRequest {
 	result := entities.NormalizedRequest{
 		OriginalText:       text,
 		NormalizedText:     canonical,
+		Tokens:             lexicalTokens(canonical),
 		QuotedMentions:     uniqueMatches(quotedMentionPattern, text, true),
 		IdentityLikeTokens: uniqueMatches(identityPattern, canonical, false),
 		CommandTokens:      collectSignals(canonical, commandSignals),
@@ -68,9 +69,10 @@ func uniqueMatches(pattern *regexp.Regexp, value string, subgroup bool) []string
 }
 
 func collectSignals(value string, registry []string) []string {
+	tokens := lexicalTokens(value)
 	result := make([]string, 0)
 	for _, signal := range registry {
-		if strings.Contains(value, signal) {
+		if containsTokenSequence(tokens, strings.Fields(signal)) {
 			result = append(result, signal)
 		}
 	}
@@ -83,6 +85,33 @@ var commandSignals = []string{
 }
 
 var referenceSignals = []string{
-	"этот", "эта", "это", "тот", "та", "выше", "предыдущ", "последн", "он ", "она ",
-	"this", "that", "previous", "above", "last",
+	"выше", "ранее", "упомянутый", "упомянутая", "упомянутое", "упомянутые",
+	"предыдущий", "предыдущее", "предыдущая", "предыдущую", "предыдущие", "предыдущей",
+	"последний", "последнее", "последняя", "последнюю", "последние", "последней",
+	"previous", "above", "earlier", "last", "mentioned",
+}
+
+func lexicalTokens(value string) []string {
+	return strings.FieldsFunc(value, func(character rune) bool {
+		return !unicode.IsLetter(character) && !unicode.IsDigit(character) && character != '_' && character != '-'
+	})
+}
+
+func containsTokenSequence(tokens, sequence []string) bool {
+	if len(sequence) == 0 || len(sequence) > len(tokens) {
+		return false
+	}
+	for start := 0; start+len(sequence) <= len(tokens); start++ {
+		matched := true
+		for offset, expected := range sequence {
+			if tokens[start+offset] != expected {
+				matched = false
+				break
+			}
+		}
+		if matched {
+			return true
+		}
+	}
+	return false
 }

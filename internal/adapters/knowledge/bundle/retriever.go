@@ -122,6 +122,10 @@ func (r *Retriever) Retrieve(_ context.Context, prompt string, limit int) entiti
 	for _, match := range matches {
 		result.Matches = append(result.Matches, match.match)
 	}
+	if len(result.Matches) > 0 {
+		result.BestScore = result.Matches[0].Score
+		result.Coverage = queryCoverage(r.chunks, result.Matches[0].ChunkID, query)
+	}
 	return result
 }
 
@@ -200,8 +204,17 @@ func buildQuery(prompt string) entities.KnowledgeSearchQuery {
 	normalized := normalize(prompt)
 	terms := meaningfulTokens(normalized)
 	expanded := make([]string, 0)
-	seen := tokenSet(strings.Join(terms, " "))
+	seen := make(map[string]struct{}, len(terms))
 	for _, term := range terms {
+		seen[term] = struct{}{}
+	}
+	for _, term := range terms {
+		if stem := stemToken(term); stem != term {
+			if _, exists := seen[stem]; !exists {
+				seen[stem] = struct{}{}
+				expanded = append(expanded, stem)
+			}
+		}
 		for _, alias := range aliases[term] {
 			if _, exists := seen[alias]; exists {
 				continue
@@ -246,6 +259,14 @@ func scoreChunk(candidate chunk, query entities.KnowledgeSearchQuery) (int, []st
 
 	allTerms := slices.Concat(query.Terms, query.ExpandedTerms)
 	for _, term := range allTerms {
+		if concept, ok := documentedConcept(term); ok {
+			switch {
+			case title == concept && heading == concept:
+				score += 120
+			case title == concept:
+				score += 70
+			}
+		}
 		if _, exists := candidate.searchTokens[term]; !exists {
 			continue
 		}
@@ -253,17 +274,50 @@ func scoreChunk(candidate chunk, query entities.KnowledgeSearchQuery) (int, []st
 		case title == term:
 			score += 30
 		case strings.Contains(title, term):
-			score += 18
+			score += 24
 		case strings.Contains(heading, term):
 			score += 12
 		default:
 			score += 3
+		}
+		if strings.HasPrefix(term, "define") && len(term) > len("define") {
+			score += 30
+		}
+		if isTechnicalAnchor(term) {
+			// Exact API identifiers are stronger evidence than generic prose words.
+			// This keeps a query such as filterView on its reference page instead of
+			// letting broad expansion terms (documentation, usage, example) dominate.
+			score += 50
 		}
 		matched = append(matched, term)
 	}
 	slices.Sort(matched)
 	matched = slices.Compact(matched)
 	return score, matched
+}
+
+func isTechnicalAnchor(term string) bool {
+	if len(term) < 6 {
+		return false
+	}
+	for _, character := range term {
+		if character > unicode.MaxASCII || (!unicode.IsLetter(character) && !unicode.IsDigit(character) && character != '_' && character != '-') {
+			return false
+		}
+	}
+	switch term {
+	case "documentation", "example", "endge", "request", "response", "system", "usage":
+		return false
+	default:
+		return true
+	}
+}
+
+func documentedConcept(term string) (string, bool) {
+	if !strings.HasPrefix(term, "define") || len(term) == len("define") {
+		return "", false
+	}
+	return strings.TrimPrefix(term, "define"), true
 }
 
 func normalize(value string) string {
@@ -302,13 +356,59 @@ func tokenSet(value string) map[string]struct{} {
 	result := make(map[string]struct{})
 	for _, token := range tokenize(value) {
 		result[token] = struct{}{}
+		result[stemToken(token)] = struct{}{}
 	}
 	return result
 }
 
+func queryCoverage(chunks []chunk, chunkID string, query entities.KnowledgeSearchQuery) float64 {
+	if len(query.Terms) == 0 {
+		return 1
+	}
+	for _, item := range chunks {
+		if item.ID != chunkID {
+			continue
+		}
+		matched := 0
+		for _, term := range query.Terms {
+			if _, exists := item.searchTokens[term]; exists {
+				matched++
+				continue
+			}
+			if _, exists := item.searchTokens[stemToken(term)]; exists {
+				matched++
+			}
+		}
+		return float64(matched) / float64(len(query.Terms))
+	}
+	return 0
+}
+
+func stemToken(token string) string {
+	characters := []rune(token)
+	if len(characters) < 5 {
+		return token
+	}
+	for _, suffix := range []string{
+		"иями", "ями", "ами", "ение", "ения", "ений", "ского", "ному", "ого", "ему", "ому",
+		"иях", "ах", "ях", "ию", "ью", "ия", "ья", "ии", "ий", "ый", "ой", "ая", "яя", "ое", "ее",
+		"ов", "ев", "ей", "ам", "ям", "ом", "ем", "ы", "и", "а", "я", "у", "ю", "е",
+	} {
+		if strings.HasSuffix(token, suffix) && len([]rune(token))-len([]rune(suffix)) >= 4 {
+			return string(characters[:len(characters)-len([]rune(suffix))])
+		}
+	}
+	for _, suffix := range []string{"ing", "ed", "es", "s"} {
+		if strings.HasSuffix(token, suffix) && len(token)-len(suffix) >= 4 {
+			return strings.TrimSuffix(token, suffix)
+		}
+	}
+	return token
+}
+
 func tokenize(value string) []string {
 	return strings.FieldsFunc(value, func(character rune) bool {
-		return !unicode.IsLetter(character) && !unicode.IsDigit(character) && character != '_' && character != '-' && character != '.'
+		return !unicode.IsLetter(character) && !unicode.IsDigit(character) && character != '_' && character != '-'
 	})
 }
 
@@ -316,7 +416,8 @@ var stopWords = map[string]struct{}{
 	"а": {}, "без": {}, "бы": {}, "в": {}, "во": {}, "вот": {}, "для": {}, "до": {}, "его": {}, "если": {},
 	"же": {}, "и": {}, "из": {}, "или": {}, "как": {}, "к": {}, "ли": {}, "мне": {}, "мы": {}, "на": {},
 	"не": {}, "но": {}, "о": {}, "он": {}, "она": {}, "они": {}, "от": {}, "по": {}, "при": {}, "с": {},
-	"со": {}, "так": {}, "то": {}, "у": {}, "что": {}, "это": {}, "этот": {}, "я": {},
+	"со": {}, "так": {}, "то": {}, "у": {}, "что": {}, "это": {}, "этот": {}, "я": {}, "объясни": {},
+	"покажи": {}, "найди": {}, "перечисли": {}, "расскажи": {},
 	"a": {}, "an": {}, "and": {}, "for": {}, "how": {}, "in": {}, "is": {}, "of": {}, "on": {}, "or": {},
 	"the": {}, "to": {}, "with": {},
 }
@@ -334,5 +435,7 @@ var aliases = map[string][]string{
 	"таблица":    {"table"},
 	"тип":        {"type"},
 	"фильтр":     {"filter"},
+	"фильтра":    {"filter"},
+	"фильтров":   {"filter"},
 	"хранилище":  {"store"},
 }

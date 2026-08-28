@@ -31,13 +31,15 @@ type portableSnapshot struct {
 }
 
 type candidate struct {
-	documentType string
-	identity     string
-	displayName  string
-	description  string
-	snapshot     json.RawMessage
-	searchText   string
-	searchTokens map[string]struct{}
+	documentType   string
+	identity       string
+	displayName    string
+	description    string
+	folderIdentity string
+	summary        json.RawMessage
+	snapshot       json.RawMessage
+	searchText     string
+	searchTokens   map[string]struct{}
 }
 
 type Selector struct {
@@ -85,8 +87,17 @@ func (s *Selector) Select(_ context.Context, input entities.DomainSelectionInput
 		result.InstalledIntegrations = append(result.InstalledIntegrations, sanitizeRaw(integration))
 	}
 
-	candidates := indexed.candidates
-	result.TotalDocuments = indexed.total
+	candidates := make([]candidate, 0, len(indexed.candidates))
+	for _, item := range indexed.candidates {
+		if !matchesExpectedType(item.documentType, input.ExpectedTypes) {
+			continue
+		}
+		if input.FolderIdentity != "" && item.folderIdentity != input.FolderIdentity {
+			continue
+		}
+		candidates = append(candidates, item)
+	}
+	result.TotalDocuments = len(candidates)
 
 	type scoredCandidate struct {
 		candidate candidate
@@ -96,6 +107,9 @@ func (s *Selector) Select(_ context.Context, input entities.DomainSelectionInput
 	direct := make([]scoredCandidate, 0)
 	for _, item := range candidates {
 		score, matched := scoreCandidate(item, input.Query)
+		if input.IncludeAll && score == 0 {
+			score = 1
+		}
 		if score > 0 {
 			direct = append(direct, scoredCandidate{candidate: item, score: score, matched: matched})
 		}
@@ -236,15 +250,25 @@ func newCandidate(documentType string, raw json.RawMessage) candidate {
 	identity := stringValue(sanitized, "identity", "id")
 	displayName := stringValue(sanitized, "displayName", "name", "title")
 	description := stringValue(sanitized, "description")
+	folderIdentity := stringValue(sanitized, "folderIdentity", "folderId", "parentFolderIdentity", "parentIdentity")
+	summaryValue := map[string]any{"documentType": documentType, "identity": identity, "displayName": displayName}
+	if description != "" {
+		summaryValue["description"] = description
+	}
+	if folderIdentity != "" {
+		summaryValue["folderIdentity"] = folderIdentity
+	}
 	searchText := normalize(strings.Join([]string{documentType, identity, displayName, description, string(snapshot)}, "\n"))
 	return candidate{
-		documentType: documentType,
-		identity:     identity,
-		displayName:  displayName,
-		description:  description,
-		snapshot:     snapshot,
-		searchText:   searchText,
-		searchTokens: tokenSet(searchText),
+		documentType:   documentType,
+		identity:       identity,
+		displayName:    displayName,
+		description:    description,
+		folderIdentity: folderIdentity,
+		summary:        marshalSanitized(summaryValue),
+		snapshot:       snapshot,
+		searchText:     searchText,
+		searchTokens:   tokenSet(searchText),
 	}
 }
 
@@ -274,21 +298,90 @@ func scoreCandidate(item candidate, query entities.KnowledgeSearchQuery) (int, [
 		}
 		matched = append(matched, term)
 	}
+	if fuzzy := fuzzyCandidateScore(query.NormalizedPrompt, item.identity, item.displayName); fuzzy > score {
+		score = fuzzy
+		matched = append(matched, "~name")
+	}
 	slices.Sort(matched)
 	return score, slices.Compact(matched)
 }
 
+func fuzzyCandidateScore(query, identity, displayName string) int {
+	queryRunes := []rune(normalize(query))
+	if len(queryRunes) < 4 || len(queryRunes) > 256 {
+		return 0
+	}
+	best := 0
+	for _, value := range []string{identity, displayName} {
+		candidateRunes := []rune(normalize(value))
+		if len(candidateRunes) < 4 || len(candidateRunes) > 256 {
+			continue
+		}
+		distance := levenshteinDistance(queryRunes, candidateRunes)
+		allowed := max(2, max(len(queryRunes), len(candidateRunes))/5)
+		if distance > allowed {
+			continue
+		}
+		score := 12 - distance*2
+		if score > best {
+			best = score
+		}
+	}
+	return best
+}
+
+func levenshteinDistance(left, right []rune) int {
+	if len(left) > len(right) {
+		left, right = right, left
+	}
+	previous := make([]int, len(left)+1)
+	for index := range previous {
+		previous[index] = index
+	}
+	for rightIndex, rightRune := range right {
+		current := make([]int, len(left)+1)
+		current[0] = rightIndex + 1
+		for leftIndex, leftRune := range left {
+			cost := 0
+			if leftRune != rightRune {
+				cost = 1
+			}
+			current[leftIndex+1] = min(
+				current[leftIndex]+1,
+				previous[leftIndex+1]+1,
+				previous[leftIndex]+cost,
+			)
+		}
+		previous = current
+	}
+	return previous[len(left)]
+}
+
 func toMatch(item candidate, kind string, score int, matched, relatedTo []string) entities.DomainContextMatch {
 	return entities.DomainContextMatch{
-		DocumentType: item.documentType,
-		Identity:     item.identity,
-		DisplayName:  item.displayName,
-		MatchKind:    kind,
-		Score:        score,
-		MatchedTerms: matched,
-		RelatedTo:    relatedTo,
-		Snapshot:     item.snapshot,
+		DocumentType:   item.documentType,
+		Identity:       item.identity,
+		DisplayName:    item.displayName,
+		FolderIdentity: item.folderIdentity,
+		MatchKind:      kind,
+		Score:          score,
+		MatchedTerms:   matched,
+		RelatedTo:      relatedTo,
+		Summary:        item.summary,
+		Snapshot:       item.snapshot,
 	}
+}
+
+func matchesExpectedType(documentType string, expected []string) bool {
+	if len(expected) == 0 {
+		return true
+	}
+	for _, value := range expected {
+		if documentType == value {
+			return true
+		}
+	}
+	return false
 }
 
 func candidateKey(item candidate) string {

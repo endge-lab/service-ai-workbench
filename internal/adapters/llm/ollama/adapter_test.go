@@ -28,6 +28,9 @@ func TestGenerateStreamsNativeChatResponseWithBearerCredential(t *testing.T) {
 		if payload.Model != "gpt-oss:20b" || len(payload.Messages) != 2 || payload.Messages[0].Role != "system" {
 			t.Fatalf("unexpected chat payload: %#v", payload)
 		}
+		if len(payload.Format) == 0 || payload.Options == nil || payload.Options.Temperature != 0 {
+			t.Fatalf("structured output contract is missing: %#v", payload)
+		}
 		response.Header().Set("Content-Type", "application/x-ndjson")
 		_, _ = response.Write([]byte("{\"message\":{\"role\":\"assistant\",\"content\":\"hello \"},\"done\":false}\n"))
 		_, _ = response.Write([]byte("{\"message\":{\"role\":\"assistant\",\"content\":\"world\"},\"done\":true}\n"))
@@ -43,9 +46,10 @@ func TestGenerateStreamsNativeChatResponseWithBearerCredential(t *testing.T) {
 	chunks := make([]string, 0, 2)
 	err := adapter.Generate(context.Background(), entities.GenerationRequest{
 		ModelRequest: entities.ModelRequest{
-			Model:        entities.ModelSnapshot{ProviderModelID: "gpt-oss:20b"},
-			SystemPrompt: "system",
-			Messages:     []entities.ModelMessage{{Role: "user", Content: "prompt"}},
+			Model:          entities.ModelSnapshot{ProviderModelID: "gpt-oss:20b"},
+			SystemPrompt:   "system",
+			Messages:       []entities.ModelMessage{{Role: "user", Content: "prompt"}},
+			ResponseFormat: entities.FinalAnswerSchema,
 		},
 		ProviderAccess: entities.ProviderAccess{BaseURL: server.URL, Credential: "test-credential"},
 	}, func(chunk string) error {

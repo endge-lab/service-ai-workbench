@@ -2,6 +2,7 @@ package ports
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/endge-lab/service-ai-workbench/internal/domain/entities"
 )
@@ -18,6 +19,7 @@ type StructuredModelRequest struct {
 	Model                    entities.ModelSnapshot
 	ProviderAccess           entities.ProviderAccess
 	SystemPrompt, UserPrompt string
+	ResponseFormat           json.RawMessage
 }
 
 type StructuredModelInvoker interface {

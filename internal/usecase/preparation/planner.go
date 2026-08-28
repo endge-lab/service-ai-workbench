@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/endge-lab/service-ai-workbench/internal/domain/entities"
@@ -36,7 +37,7 @@ func (p Planner) Plan(ctx context.Context, normalized entities.NormalizedRequest
 	if err != nil {
 		return entities.TaskPlan{}, fmt.Errorf("encode planner input: %w", err)
 	}
-	raw, usages, err := invokeStructured(ctx, p.prompts, p.models, input, entities.PromptPlannerSystem, entities.PromptPlannerRequest, payload, budget)
+	raw, usages, err := invokeStructured(ctx, p.prompts, p.models, input, entities.PromptPlannerSystem, entities.PromptPlannerRequest, payload, entities.TaskPlanSchema, budget)
 	trace.PromptUsage = append(trace.PromptUsage, usages...)
 	trace.ModelCalls = budget.used
 	if err != nil {
@@ -48,7 +49,7 @@ func (p Planner) Plan(ctx context.Context, normalized entities.NormalizedRequest
 			return planned, nil
 		}
 	}
-	repaired, repairUsage, repairErr := repairStructured(ctx, p.prompts, p.models, input, raw, "TaskPlan with an acyclic tasks array", budget)
+	repaired, repairUsage, repairErr := repairStructured(ctx, p.prompts, p.models, input, raw, entities.TaskPlanSchema, []string{"invalid task plan"}, budget)
 	trace.PromptUsage = append(trace.PromptUsage, repairUsage...)
 	trace.ModelCalls = budget.used
 	if repairErr == nil && json.Unmarshal(extractJSONObject(repaired), &planned) == nil && validatePlan(planned) == nil {
@@ -63,26 +64,37 @@ func deterministicPlan(request entities.NormalizedRequest) entities.TaskPlan {
 	tasks := make([]entities.PlannedTask, 0, len(parts)+1)
 	for _, part := range parts {
 		intent, source := classifyIntent(part)
-		mention := selectMention(request, part)
+		expectedTypes := expectedEntityTypes(part)
+		mention := selectMention(request, part, intent, expectedTypes)
+		if intent == entities.IntentUnsupported {
+			expectedTypes = nil
+			mention = ""
+		}
 		task := entities.PlannedTask{
-			ID:         fmt.Sprintf("task-%d", len(tasks)+1),
-			Intent:     intent,
-			SourceMode: source,
-			Confidence: 0.9,
-			Status:     "planned",
+			ID:            fmt.Sprintf("task-%d", len(tasks)+1),
+			Intent:        intent,
+			SourceMode:    source,
+			ExpectedTypes: expectedTypes,
+			Confidence:    0.95,
+			Status:        "planned",
 		}
 		if mention != "" {
 			task.Mentions = []string{mention}
 		}
-		if containsAny(part, "папк", "folder") {
+		if slices.Contains(expectedTypes, "folders") && len(expectedTypes) > 1 {
+			folderMention := selectFolderMention(request, part)
 			folderTaskID := fmt.Sprintf("task-%d", len(tasks)+1)
 			tasks = append(tasks, entities.PlannedTask{
 				ID: folderTaskID, Intent: entities.IntentFindEntity, SourceMode: entities.SourceDomain,
-				Mentions: []string{mention}, ExpectedTypes: []string{"folders"}, Confidence: 0.85, Status: "planned",
+				Mentions: []string{folderMention}, ExpectedTypes: []string{"folders"}, Confidence: 0.95, Status: "planned",
 			})
 			task.ID = fmt.Sprintf("task-%d", len(tasks)+1)
-			task.FolderMention = mention
+			task.FolderMention = folderMention
 			task.DependsOn = []string{folderTaskID}
+			task.ExpectedTypes = withoutType(expectedTypes, "folders")
+			if task.Intent == entities.IntentListEntities {
+				task.Mentions = nil
+			}
 		}
 		tasks = append(tasks, task)
 	}
@@ -93,33 +105,53 @@ func deterministicPlan(request entities.NormalizedRequest) entities.TaskPlan {
 }
 
 func classifyIntent(text string) (entities.TaskIntent, entities.SourceMode) {
-	documentation := containsAny(text, "документац", "синтаксис", "возможност", "как ", "documentation", "syntax", "how ")
-	domain := containsAny(text, "домен", "workspace", "рабоч", "композиц", "сущност", "папк", "entity", "composition", "folder")
-	mode := entities.SourceNone
-	switch {
-	case documentation && domain:
-		mode = entities.SourceMixed
-	case documentation:
-		mode = entities.SourceDocumentation
-	case domain:
-		mode = entities.SourceDomain
+	tokens := lexicalTokens(normalizeText(text))
+	if containsMutationCommand(tokens) && !containsAnyPhrase(tokens,
+		"как", "как изменить", "как создать", "как удалить", "объясни", "документация", "документации", "синтаксис",
+		"how", "how to", "explain", "documentation", "syntax") {
+		return entities.IntentUnsupported, entities.SourceNone
 	}
+	types := expectedEntityTypes(text)
+	hasTypes := len(types) > 0
+	documentation := containsAnyPhrase(tokens,
+		"документация", "документации", "синтаксис", "возможности", "пример", "как работает", "как использовать",
+		"что такое", "documentation", "syntax", "how does", "how to", "example")
+	explicitDomain := containsAnyPhrase(tokens, "домен", "домене", "workspace", "рабочее пространство", "рабочем пространстве", "у нас")
+	list := containsAnyPhrase(tokens, "список", "перечисли", "какие", "list")
+	find := containsAnyPhrase(tokens, "найди", "найти", "где", "find")
+	inspect := containsAnyPhrase(tokens, "покажи", "показать", "расскажи про", "проверь", "inspect", "show")
+	explain := containsAnyPhrase(tokens, "объясни", "объяснить", "что такое", "как работает", "как использовать", "explain", "how")
 	switch {
-	case containsAny(text, "объясни", "что такое", "как ", "explain", "how ") && documentation:
-		return entities.IntentExplainDocumentation, mode
-	case containsAny(text, "список", "перечисли", "какие", "list"):
+	case list && hasTypes:
 		return entities.IntentListEntities, entities.SourceDomain
-	case containsAny(text, "найди", "найти", "где", "find"):
+	case find && hasTypes:
 		return entities.IntentFindEntity, entities.SourceDomain
-	case containsAny(text, "покажи", "расскажи про", "проверь", "inspect", "show"):
+	case inspect && hasTypes:
 		return entities.IntentInspectEntity, entities.SourceDomain
-	case documentation:
-		return entities.IntentExplainDocumentation, mode
-	case domain:
-		return entities.IntentInspectEntity, mode
+	case explain && explicitDomain && hasTypes:
+		return entities.IntentExplainDocumentation, entities.SourceMixed
+	case explain || documentation:
+		return entities.IntentExplainDocumentation, entities.SourceDocumentation
+	case explicitDomain && hasTypes:
+		return entities.IntentInspectEntity, entities.SourceDomain
+	case hasTypes:
+		return entities.IntentInspectEntity, entities.SourceDomain
 	default:
 		return entities.IntentUnsupported, entities.SourceNone
 	}
+}
+
+func containsMutationCommand(tokens []string) bool {
+	commands := map[string]struct{}{
+		"добавь": {}, "измени": {}, "изменить": {}, "примени": {}, "создай": {}, "сохрани": {}, "удали": {},
+		"add": {}, "apply": {}, "create": {}, "delete": {}, "edit": {}, "save": {}, "update": {},
+	}
+	for _, token := range tokens {
+		if _, exists := commands[token]; exists {
+			return true
+		}
+	}
+	return false
 }
 
 func validatePlan(plan entities.TaskPlan) error {
@@ -137,6 +169,11 @@ func validatePlan(plan entities.TaskPlan) error {
 		}
 		if !validIntent(task.Intent) || !validSource(task.SourceMode) {
 			return fmt.Errorf("unsupported task contract")
+		}
+		for _, expectedType := range task.ExpectedTypes {
+			if !knownEntityType(expectedType) {
+				return fmt.Errorf("unsupported entity type %q", expectedType)
+			}
 		}
 		known[task.ID] = task
 		positions[task.ID] = index
@@ -208,7 +245,7 @@ func splitAtomicRequests(text string) []string {
 	return result
 }
 
-func selectMention(request entities.NormalizedRequest, part string) string {
+func selectMention(request entities.NormalizedRequest, part string, intent entities.TaskIntent, expectedTypes []string) string {
 	for _, mention := range request.QuotedMentions {
 		if strings.Contains(part, mention) {
 			return mention
@@ -219,7 +256,76 @@ func selectMention(request entities.NormalizedRequest, part string) string {
 			return token
 		}
 	}
-	return strings.TrimSpace(part)
+	tokens := lexicalTokens(part)
+	if intent == entities.IntentExplainDocumentation {
+		for _, token := range tokens {
+			if strings.HasPrefix(token, "define") && len(token) > len("define") {
+				return token
+			}
+		}
+	}
+	ignored := commandAndFillerTokens()
+	result := make([]string, 0, len(tokens))
+	for _, token := range tokens {
+		if _, skip := ignored[token]; skip {
+			continue
+		}
+		if intent != entities.IntentExplainDocumentation && isEntityAliasToken(token, expectedTypes) {
+			continue
+		}
+		result = append(result, token)
+	}
+	return strings.TrimSpace(strings.Join(result, " "))
+}
+
+func selectFolderMention(request entities.NormalizedRequest, part string) string {
+	for _, mention := range request.QuotedMentions {
+		if strings.Contains(part, mention) {
+			return mention
+		}
+	}
+	tokens := lexicalTokens(part)
+	for index, token := range tokens {
+		if token != "папка" && token != "папке" && token != "папки" && token != "folder" {
+			continue
+		}
+		if index+1 < len(tokens) {
+			return strings.Join(tokens[index+1:], " ")
+		}
+	}
+	return ""
+}
+
+func commandAndFillerTokens() map[string]struct{} {
+	values := []string{
+		"найди", "найти", "покажи", "показать", "объясни", "объяснить", "перечисли", "список", "какие",
+		"расскажи", "про", "проверь", "что", "такое", "как", "работает", "использовать", "мне", "пожалуйста",
+		"у", "нас", "есть", "в", "во", "из", "на", "find", "show", "explain", "list", "inspect", "how", "does", "to",
+	}
+	result := make(map[string]struct{}, len(values))
+	for _, value := range values {
+		result[value] = struct{}{}
+	}
+	return result
+}
+
+func containsAnyPhrase(tokens []string, phrases ...string) bool {
+	for _, phrase := range phrases {
+		if containsTokenSequence(tokens, strings.Fields(phrase)) {
+			return true
+		}
+	}
+	return false
+}
+
+func withoutType(values []string, excluded string) []string {
+	result := make([]string, 0, len(values))
+	for _, value := range values {
+		if value != excluded {
+			result = append(result, value)
+		}
+	}
+	return result
 }
 
 func minimalHistory(messages []entities.Message, limit int) []entities.ModelMessage {
@@ -231,13 +337,4 @@ func minimalHistory(messages []entities.Message, limit int) []entities.ModelMess
 		result = append(result, entities.ModelMessage{Role: message.Role, Content: message.Content})
 	}
 	return result
-}
-
-func containsAny(value string, needles ...string) bool {
-	for _, needle := range needles {
-		if strings.Contains(value, needle) {
-			return true
-		}
-	}
-	return false
 }

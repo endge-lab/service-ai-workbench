@@ -32,6 +32,7 @@ func invokeStructured(
 	systemID entities.PromptID,
 	requestID entities.PromptID,
 	payload []byte,
+	responseFormat json.RawMessage,
 	budget *modelCallBudget,
 ) ([]byte, []entities.PromptUsage, error) {
 	if err := budget.consume(); err != nil {
@@ -57,6 +58,7 @@ func invokeStructured(
 		ProviderAccess: input.ProviderAccess,
 		SystemPrompt:   system.Content,
 		UserPrompt:     request.Content,
+		ResponseFormat: responseFormat,
 	})
 	return raw, usages, err
 }
@@ -67,14 +69,15 @@ func repairStructured(
 	models ports.StructuredModelInvoker,
 	input entities.RunInput,
 	raw []byte,
-	expected string,
+	expected json.RawMessage,
+	validationErrors []string,
 	budget *modelCallBudget,
 ) ([]byte, []entities.PromptUsage, error) {
-	payload, err := json.Marshal(map[string]any{"response": string(raw), "expectedSchema": expected})
+	payload, err := json.Marshal(map[string]any{"response": string(raw), "expectedSchema": json.RawMessage(expected), "validationErrors": validationErrors})
 	if err != nil {
 		return nil, nil, err
 	}
-	return invokeStructured(ctx, prompts, models, input, entities.PromptRepairSystem, entities.PromptRepairRequest, payload, budget)
+	return invokeStructured(ctx, prompts, models, input, entities.PromptRepairSystem, entities.PromptRepairRequest, payload, expected, budget)
 }
 
 func extractJSONObject(raw []byte) []byte {

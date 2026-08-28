@@ -38,9 +38,15 @@ type Adapter struct {
 }
 
 type chatRequest struct {
-	Model    string        `json:"model"`
-	Messages []chatMessage `json:"messages"`
-	Stream   bool          `json:"stream"`
+	Model    string          `json:"model"`
+	Messages []chatMessage   `json:"messages"`
+	Stream   bool            `json:"stream"`
+	Format   json.RawMessage `json:"format,omitempty"`
+	Options  *chatOptions    `json:"options,omitempty"`
+}
+
+type chatOptions struct {
+	Temperature float64 `json:"temperature"`
 }
 
 type chatMessage struct {
@@ -83,6 +89,8 @@ func (a *Adapter) Generate(ctx context.Context, request entities.GenerationReque
 		Model:    request.ModelRequest.Model.ProviderModelID,
 		Messages: modelMessages(request.ModelRequest),
 		Stream:   true,
+		Format:   request.ModelRequest.ResponseFormat,
+		Options:  structuredOptions(request.ModelRequest.ResponseFormat),
 	})
 	if err != nil {
 		return fmt.Errorf("encode Ollama request: %w", err)
@@ -149,6 +157,13 @@ func (a *Adapter) Generate(ctx context.Context, request entities.GenerationReque
 		return errors.New("Ollama returned an empty response")
 	}
 	return nil
+}
+
+func structuredOptions(format json.RawMessage) *chatOptions {
+	if len(format) == 0 {
+		return nil
+	}
+	return &chatOptions{Temperature: 0}
 }
 
 func modelMessages(request entities.ModelRequest) []chatMessage {

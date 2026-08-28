@@ -18,13 +18,17 @@ type KnowledgeRetrieval struct {
 	BundleID  string
 	Query     KnowledgeSearchQuery
 	Matches   []KnowledgeMatch
+	BestScore int
+	Coverage  float64
 	Error     string
 }
 
 type DomainContextMatch struct {
 	DocumentType, Identity, DisplayName, MatchKind string
+	FolderIdentity                                 string
 	Score                                          int
 	MatchedTerms, RelatedTo                        []string
+	Summary                                        json.RawMessage
 	Snapshot                                       json.RawMessage
 }
 
@@ -44,5 +48,8 @@ type DomainSelectionInput struct {
 	WorkspaceID, Generation, SnapshotSHA256 string
 	Snapshot                                []byte
 	Query                                   KnowledgeSearchQuery
+	ExpectedTypes                           []string
+	FolderIdentity                          string
+	IncludeAll                              bool
 	Limit                                   int
 }

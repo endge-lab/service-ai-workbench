@@ -15,7 +15,7 @@ Configurator не должен обращаться к Workbench напряму�
 основной backend. Workbench будет отвечать за AI orchestration в рамках явно
 авторизованного запуска.
 
-## Возможности v0.6.0
+## Возможности v0.7.0
 
 - HTTP на Fiber;
 - dependency injection через `fx`;
@@ -29,7 +29,8 @@ Configurator не должен обращаться к Workbench напряму�
 - opaque cursor pagination, atomic reset и один active run на conversation;
 - реальный streaming adapter Ollama через native `/api/chat` и hardcoded adapter Anthropic;
 - локальный `endge-knowledge/v1` bundle и детерминированный поиск по публичной документации;
-- gated preparation pipeline, embedded prompt catalog и buffered response validation;
+- gated preparation pipeline с token-boundary routing, типизированным domain registry, двухфазным retrieval и компактными list contexts;
+- embedded prompt catalog, native Ollama JSON Schema и buffered response validation;
 - отключённая по умолчанию запись preparation trace в `tmp/debug`;
 - `/health` и `/version`;
 - Swagger/Scalar в non-production окружениях;

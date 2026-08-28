@@ -52,8 +52,65 @@ func (a ModelRequestAssembler) Assemble(ctx context.Context, input Input, plan e
 	if err != nil {
 		return entities.ModelRequest{}, nil, err
 	}
+	responseFormat, err := finalAnswerSchema(plan, blocks)
+	if err != nil {
+		return entities.ModelRequest{}, nil, fmt.Errorf("build final answer schema: %w", err)
+	}
 	return entities.ModelRequest{
 		Model: input.RunInput.Model, SystemPrompt: system.Content,
-		Messages: []entities.ModelMessage{{Role: "user", Content: request.Content}},
+		Messages: []entities.ModelMessage{{Role: "user", Content: request.Content}}, ResponseFormat: responseFormat,
 	}, []entities.PromptUsage{{ID: system.ID, Version: system.Version, SHA256: system.SHA256}, {ID: request.ID, Version: request.Version, SHA256: request.SHA256}}, nil
+}
+
+func finalAnswerSchema(plan entities.TaskPlan, blocks []entities.RetrievedBlock) (json.RawMessage, error) {
+	entityOptions := make([]any, 0)
+	for _, citation := range allowedEntityCitations(plan, blocks) {
+		entityOptions = append(entityOptions, map[string]any{
+			"type": "object", "additionalProperties": false,
+			"required": []string{"documentType", "identity"},
+			"properties": map[string]any{
+				"documentType": map[string]any{"const": citation.DocumentType},
+				"identity":     map[string]any{"const": citation.Identity},
+			},
+		})
+	}
+	documentationIDs := make([]string, 0)
+	seenDocumentation := map[string]struct{}{}
+	for _, block := range blocks {
+		if block.SourceKind != "documentation" {
+			continue
+		}
+		if _, exists := seenDocumentation[block.SourceKey]; exists {
+			continue
+		}
+		seenDocumentation[block.SourceKey] = struct{}{}
+		documentationIDs = append(documentationIDs, block.SourceKey)
+	}
+
+	entityCitations := map[string]any{"type": "array", "uniqueItems": true}
+	if len(entityOptions) == 0 {
+		entityCitations["maxItems"] = 0
+		entityCitations["items"] = map[string]any{"type": "object"}
+	} else {
+		entityCitations["items"] = map[string]any{"oneOf": entityOptions}
+	}
+	documentationCitations := map[string]any{"type": "array", "uniqueItems": true}
+	if len(documentationIDs) == 0 {
+		documentationCitations["maxItems"] = 0
+		documentationCitations["items"] = map[string]any{"type": "string"}
+	} else {
+		documentationCitations["items"] = map[string]any{"type": "string", "enum": documentationIDs}
+	}
+
+	schema := map[string]any{
+		"type": "object", "additionalProperties": false,
+		"required": []string{"answer", "entityCitations", "documentationCitations", "limitations"},
+		"properties": map[string]any{
+			"answer":                 map[string]any{"type": "string"},
+			"entityCitations":        entityCitations,
+			"documentationCitations": documentationCitations,
+			"limitations":            map[string]any{"type": "array", "items": map[string]any{"type": "string"}},
+		},
+	}
+	return json.Marshal(schema)
 }
