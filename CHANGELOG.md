@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 0.6.0
+
+- Добавлены версионные Interaction и clarification с атомарным продолжением логического запроса.
+- Реализован gated preparation pipeline с детерминированными этапами, ограниченными Planner/Query Expander/Reranker/Classifier и embedded prompt catalog.
+- Итоговый provider response буферизуется, проверяется и только после validation передаётся клиенту и сохраняется в истории.
+- Canonical gRPC contract расширен additive linkage-полями, clarification event и восстановлением открытого уточнения.
+
 ## 0.5.0
 
 - Ollama adapter выполняет реальный native `/api/chat` streaming-вызов с Bearer credential.

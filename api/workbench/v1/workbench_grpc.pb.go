@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.6.0
 // - protoc             (unknown)
-// source: endge/ai/workbench/v1/workbench.proto
+// source: api/proto/endge/ai/workbench/v1/workbench.proto
 
 package workbenchv1
 
@@ -387,5 +387,5 @@ var WorkbenchService_ServiceDesc = grpc.ServiceDesc{
 			ServerStreams: true,
 		},
 	},
-	Metadata: "endge/ai/workbench/v1/workbench.proto",
+	Metadata: "api/proto/endge/ai/workbench/v1/workbench.proto",
 }

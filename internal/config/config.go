@@ -15,10 +15,11 @@ type BaseConfig = kitconfig.ServiceConfig
 
 type Config struct {
 	*kitconfig.ServiceConfig
-	Knowledge KnowledgeConfig
-	Context   ContextConfig
-	Debug     DebugConfig
-	Ollama    OllamaConfig
+	Knowledge   KnowledgeConfig
+	Context     ContextConfig
+	Preparation PreparationConfig
+	Debug       DebugConfig
+	Ollama      OllamaConfig
 }
 
 type KnowledgeConfig struct {
@@ -30,6 +31,13 @@ type ContextConfig struct {
 	DomainMaxResults int
 	MessageLimit     int
 	ModelMaxChars    int
+}
+
+type PreparationConfig struct {
+	MaxModelCalls         int
+	MaxCandidates         int
+	RerankerMinConfidence float64
+	ResponseMaxBytes      int
 }
 
 type DebugConfig struct {
@@ -93,6 +101,34 @@ func Load() (*Config, error) {
 	if modelMaxChars < 4000 || modelMaxChars > 500000 {
 		return nil, fmt.Errorf("AI_MODEL_CONTEXT_MAX_CHARS must be between 4000 and 500000")
 	}
+	maxModelCalls, err := intFromEnv("AI_PREPARATION_MAX_MODEL_CALLS", 3)
+	if err != nil {
+		return nil, err
+	}
+	if maxModelCalls < 0 || maxModelCalls > 3 {
+		return nil, fmt.Errorf("AI_PREPARATION_MAX_MODEL_CALLS must be between 0 and 3")
+	}
+	maxCandidates, err := intFromEnv("AI_PREPARATION_MAX_CANDIDATES", 5)
+	if err != nil {
+		return nil, err
+	}
+	if maxCandidates < 1 || maxCandidates > 5 {
+		return nil, fmt.Errorf("AI_PREPARATION_MAX_CANDIDATES must be between 1 and 5")
+	}
+	rerankerConfidence, err := floatFromEnv("AI_RERANKER_MIN_CONFIDENCE", 0.8)
+	if err != nil {
+		return nil, err
+	}
+	if rerankerConfidence < 0.5 || rerankerConfidence > 1 {
+		return nil, fmt.Errorf("AI_RERANKER_MIN_CONFIDENCE must be between 0.5 and 1")
+	}
+	responseMaxBytes, err := intFromEnv("AI_RESPONSE_BUFFER_MAX_BYTES", 2*1024*1024)
+	if err != nil {
+		return nil, err
+	}
+	if responseMaxBytes < 64*1024 || responseMaxBytes > 16*1024*1024 {
+		return nil, fmt.Errorf("AI_RESPONSE_BUFFER_MAX_BYTES must be between 65536 and 16777216")
+	}
 	ollamaTimeout, err := durationFromEnv("AI_OLLAMA_REQUEST_TIMEOUT", 2*time.Minute)
 	if err != nil {
 		return nil, err
@@ -130,6 +166,12 @@ func Load() (*Config, error) {
 			MessageLimit:     messageLimit,
 			ModelMaxChars:    modelMaxChars,
 		},
+		Preparation: PreparationConfig{
+			MaxModelCalls:         maxModelCalls,
+			MaxCandidates:         maxCandidates,
+			RerankerMinConfidence: rerankerConfidence,
+			ResponseMaxBytes:      responseMaxBytes,
+		},
 		Debug: DebugConfig{
 			Enabled:    debugEnabled,
 			OutputPath: envOrDefault("AI_DEBUG_OUTPUT_PATH", "tmp/debug"),
@@ -161,6 +203,18 @@ func intFromEnv(name string, fallback int) (int, error) {
 		return fallback, nil
 	}
 	parsed, err := strconv.Atoi(value)
+	if err != nil {
+		return 0, fmt.Errorf("parse %s: %w", name, err)
+	}
+	return parsed, nil
+}
+
+func floatFromEnv(name string, fallback float64) (float64, error) {
+	value := strings.TrimSpace(os.Getenv(name))
+	if value == "" {
+		return fallback, nil
+	}
+	parsed, err := strconv.ParseFloat(value, 64)
 	if err != nil {
 		return 0, fmt.Errorf("parse %s: %w", name, err)
 	}

@@ -18,6 +18,7 @@ import (
 	"github.com/endge-lab/service-ai-workbench/internal/domain/entities"
 	"github.com/endge-lab/service-ai-workbench/internal/usecase/ports"
 	"go.uber.org/zap"
+	"golang.org/x/text/unicode/norm"
 )
 
 const bundleSchemaVersion = "endge-knowledge/v1"
@@ -266,7 +267,16 @@ func scoreChunk(candidate chunk, query entities.KnowledgeSearchQuery) (int, []st
 }
 
 func normalize(value string) string {
-	return strings.Join(strings.Fields(strings.ToLower(value)), " ")
+	value = norm.NFKC.String(value)
+	value = strings.Map(func(character rune) rune {
+		switch character {
+		case 'Ё', 'ё':
+			return 'е'
+		default:
+			return unicode.ToLower(character)
+		}
+	}, value)
+	return strings.Join(strings.Fields(value), " ")
 }
 
 func meaningfulTokens(value string) []string {

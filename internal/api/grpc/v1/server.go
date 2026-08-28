@@ -71,7 +71,7 @@ func (s *Server) UpdateConversationModel(ctx context.Context, request *workbench
 }
 
 func (s *Server) ListMessages(ctx context.Context, request *workbenchv1.ListMessagesRequest) (*workbenchv1.ListMessagesResponse, error) {
-	items, cursor, err := s.usecase.ListMessages(ctx, request.GetActorId(), request.GetWorkspaceId(), request.GetConversationId(), int(request.GetLimit()), request.GetCursor())
+	items, cursor, clarification, err := s.usecase.ListMessages(ctx, request.GetActorId(), request.GetWorkspaceId(), request.GetConversationId(), int(request.GetLimit()), request.GetCursor())
 	if err != nil {
 		return nil, mapError(err)
 	}
@@ -79,6 +79,7 @@ func (s *Server) ListMessages(ctx context.Context, request *workbenchv1.ListMess
 	for _, item := range items {
 		response.Items = append(response.Items, messageToProto(item))
 	}
+	response.OpenClarification = clarificationToProto(clarification)
 	return response, nil
 }
 
@@ -87,6 +88,8 @@ func (s *Server) Run(request *workbenchv1.RunRequest, stream workbenchv1.Workben
 	input := entities.RunInput{
 		RequestID: request.GetRequestId(), Actor: actorFromProto(request.GetActor()), Workspace: workspaceFromProto(request.GetWorkspace()),
 		ConversationID: request.GetConversationId(), Prompt: request.GetPrompt(), Model: modelFromProto(request.GetModel()),
+		InteractionID: request.GetInteractionId(), ReplyToClarificationID: request.GetReplyToClarificationId(),
+		SelectedCandidateID: request.GetSelectedCandidateId(),
 	}
 	if snapshot != nil {
 		input.Snapshot = snapshot.GetPayload()
@@ -106,6 +109,7 @@ func (s *Server) Run(request *workbenchv1.RunRequest, stream workbenchv1.Workben
 		sendErr := stream.Send(&workbenchv1.RunResponse{
 			Type: eventTypeToProto(event.Type), RunId: event.RunID, MessageId: event.MessageID,
 			Delta: event.Delta, ErrorCode: event.ErrorCode, ErrorMessage: event.ErrorMessage,
+			InteractionId: event.InteractionID, Clarification: clarificationToProto(event.Clarification),
 			CreatedAt: timestamppb.New(event.CreatedAt),
 		})
 		if sendErr == nil && event.Type == workbenchusecase.EventFailed {
@@ -169,6 +173,24 @@ func messageToProto(value entities.Message) *workbenchv1.Message {
 	}
 }
 
+func clarificationToProto(value *entities.Clarification) *workbenchv1.Clarification {
+	if value == nil {
+		return nil
+	}
+	result := &workbenchv1.Clarification{
+		Id: value.ID, InteractionId: value.InteractionID, TaskId: value.TaskID, Slot: value.Slot,
+		Question: value.Question, PlanVersion: int32(value.PlanVersion),
+		Candidates: make([]*workbenchv1.ClarificationCandidate, 0, len(value.Candidates)),
+	}
+	for _, candidate := range value.Candidates {
+		result.Candidates = append(result.Candidates, &workbenchv1.ClarificationCandidate{
+			CandidateId: candidate.CandidateID, DocumentType: candidate.DocumentType,
+			Identity: candidate.Identity, DisplayName: candidate.DisplayName,
+		})
+	}
+	return result
+}
+
 func eventTypeToProto(value int) workbenchv1.RunEventType {
 	switch value {
 	case workbenchusecase.EventStarted:
@@ -179,6 +201,8 @@ func eventTypeToProto(value int) workbenchv1.RunEventType {
 		return workbenchv1.RunEventType_RUN_EVENT_TYPE_COMPLETED
 	case workbenchusecase.EventFailed:
 		return workbenchv1.RunEventType_RUN_EVENT_TYPE_FAILED
+	case workbenchusecase.EventClarificationRequired:
+		return workbenchv1.RunEventType_RUN_EVENT_TYPE_CLARIFICATION_REQUIRED
 	default:
 		return workbenchv1.RunEventType_RUN_EVENT_TYPE_UNSPECIFIED
 	}

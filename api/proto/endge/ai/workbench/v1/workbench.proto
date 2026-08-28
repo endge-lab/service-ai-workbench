@@ -124,6 +124,7 @@ message ListMessagesRequest {
 message ListMessagesResponse {
   repeated Message items = 1;
   string next_cursor = 2;
+  Clarification open_clarification = 3;
 }
 
 message WorkspaceSnapshot {
@@ -150,6 +151,26 @@ message RunRequest {
   ModelSnapshot model = 6;
   WorkspaceSnapshot snapshot = 7;
   ProviderAccess provider_access = 8;
+  string interaction_id = 9;
+  string reply_to_clarification_id = 10;
+  string selected_candidate_id = 11;
+}
+
+message ClarificationCandidate {
+  string candidate_id = 1;
+  string document_type = 2;
+  string identity = 3;
+  string display_name = 4;
+}
+
+message Clarification {
+  string id = 1;
+  string interaction_id = 2;
+  string task_id = 3;
+  string slot = 4;
+  string question = 5;
+  repeated ClarificationCandidate candidates = 6;
+  int32 plan_version = 7;
 }
 
 enum RunEventType {
@@ -158,6 +179,7 @@ enum RunEventType {
   RUN_EVENT_TYPE_CONTENT_DELTA = 2;
   RUN_EVENT_TYPE_COMPLETED = 3;
   RUN_EVENT_TYPE_FAILED = 4;
+  RUN_EVENT_TYPE_CLARIFICATION_REQUIRED = 5;
 }
 
 message RunResponse {
@@ -168,6 +190,8 @@ message RunResponse {
   string error_code = 5;
   string error_message = 6;
   google.protobuf.Timestamp created_at = 7;
+  string interaction_id = 8;
+  Clarification clarification = 9;
 }
 
 message GetServiceInfoRequest {}

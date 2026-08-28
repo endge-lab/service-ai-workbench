@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.11
 // 	protoc        (unknown)
-// source: endge/ai/workbench/v1/workbench.proto
+// source: api/proto/endge/ai/workbench/v1/workbench.proto
 
 package workbenchv1
 
@@ -55,11 +55,11 @@ func (x MessageRole) String() string {
 }
 
 func (MessageRole) Descriptor() protoreflect.EnumDescriptor {
-	return file_endge_ai_workbench_v1_workbench_proto_enumTypes[0].Descriptor()
+	return file_api_proto_endge_ai_workbench_v1_workbench_proto_enumTypes[0].Descriptor()
 }
 
 func (MessageRole) Type() protoreflect.EnumType {
-	return &file_endge_ai_workbench_v1_workbench_proto_enumTypes[0]
+	return &file_api_proto_endge_ai_workbench_v1_workbench_proto_enumTypes[0]
 }
 
 func (x MessageRole) Number() protoreflect.EnumNumber {
@@ -68,17 +68,18 @@ func (x MessageRole) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use MessageRole.Descriptor instead.
 func (MessageRole) EnumDescriptor() ([]byte, []int) {
-	return file_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{0}
+	return file_api_proto_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{0}
 }
 
 type RunEventType int32
 
 const (
-	RunEventType_RUN_EVENT_TYPE_UNSPECIFIED   RunEventType = 0
-	RunEventType_RUN_EVENT_TYPE_STARTED       RunEventType = 1
-	RunEventType_RUN_EVENT_TYPE_CONTENT_DELTA RunEventType = 2
-	RunEventType_RUN_EVENT_TYPE_COMPLETED     RunEventType = 3
-	RunEventType_RUN_EVENT_TYPE_FAILED        RunEventType = 4
+	RunEventType_RUN_EVENT_TYPE_UNSPECIFIED            RunEventType = 0
+	RunEventType_RUN_EVENT_TYPE_STARTED                RunEventType = 1
+	RunEventType_RUN_EVENT_TYPE_CONTENT_DELTA          RunEventType = 2
+	RunEventType_RUN_EVENT_TYPE_COMPLETED              RunEventType = 3
+	RunEventType_RUN_EVENT_TYPE_FAILED                 RunEventType = 4
+	RunEventType_RUN_EVENT_TYPE_CLARIFICATION_REQUIRED RunEventType = 5
 )
 
 // Enum value maps for RunEventType.
@@ -89,13 +90,15 @@ var (
 		2: "RUN_EVENT_TYPE_CONTENT_DELTA",
 		3: "RUN_EVENT_TYPE_COMPLETED",
 		4: "RUN_EVENT_TYPE_FAILED",
+		5: "RUN_EVENT_TYPE_CLARIFICATION_REQUIRED",
 	}
 	RunEventType_value = map[string]int32{
-		"RUN_EVENT_TYPE_UNSPECIFIED":   0,
-		"RUN_EVENT_TYPE_STARTED":       1,
-		"RUN_EVENT_TYPE_CONTENT_DELTA": 2,
-		"RUN_EVENT_TYPE_COMPLETED":     3,
-		"RUN_EVENT_TYPE_FAILED":        4,
+		"RUN_EVENT_TYPE_UNSPECIFIED":            0,
+		"RUN_EVENT_TYPE_STARTED":                1,
+		"RUN_EVENT_TYPE_CONTENT_DELTA":          2,
+		"RUN_EVENT_TYPE_COMPLETED":              3,
+		"RUN_EVENT_TYPE_FAILED":                 4,
+		"RUN_EVENT_TYPE_CLARIFICATION_REQUIRED": 5,
 	}
 )
 
@@ -110,11 +113,11 @@ func (x RunEventType) String() string {
 }
 
 func (RunEventType) Descriptor() protoreflect.EnumDescriptor {
-	return file_endge_ai_workbench_v1_workbench_proto_enumTypes[1].Descriptor()
+	return file_api_proto_endge_ai_workbench_v1_workbench_proto_enumTypes[1].Descriptor()
 }
 
 func (RunEventType) Type() protoreflect.EnumType {
-	return &file_endge_ai_workbench_v1_workbench_proto_enumTypes[1]
+	return &file_api_proto_endge_ai_workbench_v1_workbench_proto_enumTypes[1]
 }
 
 func (x RunEventType) Number() protoreflect.EnumNumber {
@@ -123,7 +126,7 @@ func (x RunEventType) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use RunEventType.Descriptor instead.
 func (RunEventType) EnumDescriptor() ([]byte, []int) {
-	return file_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{1}
+	return file_api_proto_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{1}
 }
 
 type Actor struct {
@@ -137,7 +140,7 @@ type Actor struct {
 
 func (x *Actor) Reset() {
 	*x = Actor{}
-	mi := &file_endge_ai_workbench_v1_workbench_proto_msgTypes[0]
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -149,7 +152,7 @@ func (x *Actor) String() string {
 func (*Actor) ProtoMessage() {}
 
 func (x *Actor) ProtoReflect() protoreflect.Message {
-	mi := &file_endge_ai_workbench_v1_workbench_proto_msgTypes[0]
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -162,7 +165,7 @@ func (x *Actor) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Actor.ProtoReflect.Descriptor instead.
 func (*Actor) Descriptor() ([]byte, []int) {
-	return file_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{0}
+	return file_api_proto_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *Actor) GetId() string {
@@ -196,7 +199,7 @@ type Workspace struct {
 
 func (x *Workspace) Reset() {
 	*x = Workspace{}
-	mi := &file_endge_ai_workbench_v1_workbench_proto_msgTypes[1]
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -208,7 +211,7 @@ func (x *Workspace) String() string {
 func (*Workspace) ProtoMessage() {}
 
 func (x *Workspace) ProtoReflect() protoreflect.Message {
-	mi := &file_endge_ai_workbench_v1_workbench_proto_msgTypes[1]
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -221,7 +224,7 @@ func (x *Workspace) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Workspace.ProtoReflect.Descriptor instead.
 func (*Workspace) Descriptor() ([]byte, []int) {
-	return file_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{1}
+	return file_api_proto_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *Workspace) GetId() string {
@@ -251,7 +254,7 @@ type ModelSnapshot struct {
 
 func (x *ModelSnapshot) Reset() {
 	*x = ModelSnapshot{}
-	mi := &file_endge_ai_workbench_v1_workbench_proto_msgTypes[2]
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -263,7 +266,7 @@ func (x *ModelSnapshot) String() string {
 func (*ModelSnapshot) ProtoMessage() {}
 
 func (x *ModelSnapshot) ProtoReflect() protoreflect.Message {
-	mi := &file_endge_ai_workbench_v1_workbench_proto_msgTypes[2]
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -276,7 +279,7 @@ func (x *ModelSnapshot) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ModelSnapshot.ProtoReflect.Descriptor instead.
 func (*ModelSnapshot) Descriptor() ([]byte, []int) {
-	return file_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{2}
+	return file_api_proto_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *ModelSnapshot) GetProfileId() string {
@@ -322,7 +325,7 @@ type GetCapabilitiesRequest struct {
 
 func (x *GetCapabilitiesRequest) Reset() {
 	*x = GetCapabilitiesRequest{}
-	mi := &file_endge_ai_workbench_v1_workbench_proto_msgTypes[3]
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -334,7 +337,7 @@ func (x *GetCapabilitiesRequest) String() string {
 func (*GetCapabilitiesRequest) ProtoMessage() {}
 
 func (x *GetCapabilitiesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_endge_ai_workbench_v1_workbench_proto_msgTypes[3]
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -347,7 +350,7 @@ func (x *GetCapabilitiesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetCapabilitiesRequest.ProtoReflect.Descriptor instead.
 func (*GetCapabilitiesRequest) Descriptor() ([]byte, []int) {
-	return file_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{3}
+	return file_api_proto_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{3}
 }
 
 type GetCapabilitiesResponse struct {
@@ -359,7 +362,7 @@ type GetCapabilitiesResponse struct {
 
 func (x *GetCapabilitiesResponse) Reset() {
 	*x = GetCapabilitiesResponse{}
-	mi := &file_endge_ai_workbench_v1_workbench_proto_msgTypes[4]
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -371,7 +374,7 @@ func (x *GetCapabilitiesResponse) String() string {
 func (*GetCapabilitiesResponse) ProtoMessage() {}
 
 func (x *GetCapabilitiesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_endge_ai_workbench_v1_workbench_proto_msgTypes[4]
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -384,7 +387,7 @@ func (x *GetCapabilitiesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetCapabilitiesResponse.ProtoReflect.Descriptor instead.
 func (*GetCapabilitiesResponse) Descriptor() ([]byte, []int) {
-	return file_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{4}
+	return file_api_proto_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *GetCapabilitiesResponse) GetAdapters() []string {
@@ -410,7 +413,7 @@ type Conversation struct {
 
 func (x *Conversation) Reset() {
 	*x = Conversation{}
-	mi := &file_endge_ai_workbench_v1_workbench_proto_msgTypes[5]
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -422,7 +425,7 @@ func (x *Conversation) String() string {
 func (*Conversation) ProtoMessage() {}
 
 func (x *Conversation) ProtoReflect() protoreflect.Message {
-	mi := &file_endge_ai_workbench_v1_workbench_proto_msgTypes[5]
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -435,7 +438,7 @@ func (x *Conversation) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Conversation.ProtoReflect.Descriptor instead.
 func (*Conversation) Descriptor() ([]byte, []int) {
-	return file_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{5}
+	return file_api_proto_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *Conversation) GetId() string {
@@ -507,7 +510,7 @@ type ListConversationsRequest struct {
 
 func (x *ListConversationsRequest) Reset() {
 	*x = ListConversationsRequest{}
-	mi := &file_endge_ai_workbench_v1_workbench_proto_msgTypes[6]
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -519,7 +522,7 @@ func (x *ListConversationsRequest) String() string {
 func (*ListConversationsRequest) ProtoMessage() {}
 
 func (x *ListConversationsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_endge_ai_workbench_v1_workbench_proto_msgTypes[6]
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -532,7 +535,7 @@ func (x *ListConversationsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListConversationsRequest.ProtoReflect.Descriptor instead.
 func (*ListConversationsRequest) Descriptor() ([]byte, []int) {
-	return file_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{6}
+	return file_api_proto_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *ListConversationsRequest) GetActorId() string {
@@ -580,7 +583,7 @@ type ListConversationsResponse struct {
 
 func (x *ListConversationsResponse) Reset() {
 	*x = ListConversationsResponse{}
-	mi := &file_endge_ai_workbench_v1_workbench_proto_msgTypes[7]
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -592,7 +595,7 @@ func (x *ListConversationsResponse) String() string {
 func (*ListConversationsResponse) ProtoMessage() {}
 
 func (x *ListConversationsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_endge_ai_workbench_v1_workbench_proto_msgTypes[7]
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -605,7 +608,7 @@ func (x *ListConversationsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListConversationsResponse.ProtoReflect.Descriptor instead.
 func (*ListConversationsResponse) Descriptor() ([]byte, []int) {
-	return file_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{7}
+	return file_api_proto_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *ListConversationsResponse) GetItems() []*Conversation {
@@ -633,7 +636,7 @@ type CreateConversationRequest struct {
 
 func (x *CreateConversationRequest) Reset() {
 	*x = CreateConversationRequest{}
-	mi := &file_endge_ai_workbench_v1_workbench_proto_msgTypes[8]
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -645,7 +648,7 @@ func (x *CreateConversationRequest) String() string {
 func (*CreateConversationRequest) ProtoMessage() {}
 
 func (x *CreateConversationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_endge_ai_workbench_v1_workbench_proto_msgTypes[8]
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -658,7 +661,7 @@ func (x *CreateConversationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateConversationRequest.ProtoReflect.Descriptor instead.
 func (*CreateConversationRequest) Descriptor() ([]byte, []int) {
-	return file_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{8}
+	return file_api_proto_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *CreateConversationRequest) GetActor() *Actor {
@@ -691,7 +694,7 @@ type CreateConversationResponse struct {
 
 func (x *CreateConversationResponse) Reset() {
 	*x = CreateConversationResponse{}
-	mi := &file_endge_ai_workbench_v1_workbench_proto_msgTypes[9]
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -703,7 +706,7 @@ func (x *CreateConversationResponse) String() string {
 func (*CreateConversationResponse) ProtoMessage() {}
 
 func (x *CreateConversationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_endge_ai_workbench_v1_workbench_proto_msgTypes[9]
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -716,7 +719,7 @@ func (x *CreateConversationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateConversationResponse.ProtoReflect.Descriptor instead.
 func (*CreateConversationResponse) Descriptor() ([]byte, []int) {
-	return file_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{9}
+	return file_api_proto_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *CreateConversationResponse) GetConversation() *Conversation {
@@ -738,7 +741,7 @@ type ResetConversationRequest struct {
 
 func (x *ResetConversationRequest) Reset() {
 	*x = ResetConversationRequest{}
-	mi := &file_endge_ai_workbench_v1_workbench_proto_msgTypes[10]
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -750,7 +753,7 @@ func (x *ResetConversationRequest) String() string {
 func (*ResetConversationRequest) ProtoMessage() {}
 
 func (x *ResetConversationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_endge_ai_workbench_v1_workbench_proto_msgTypes[10]
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -763,7 +766,7 @@ func (x *ResetConversationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ResetConversationRequest.ProtoReflect.Descriptor instead.
 func (*ResetConversationRequest) Descriptor() ([]byte, []int) {
-	return file_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{10}
+	return file_api_proto_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *ResetConversationRequest) GetActor() *Actor {
@@ -803,7 +806,7 @@ type ResetConversationResponse struct {
 
 func (x *ResetConversationResponse) Reset() {
 	*x = ResetConversationResponse{}
-	mi := &file_endge_ai_workbench_v1_workbench_proto_msgTypes[11]
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -815,7 +818,7 @@ func (x *ResetConversationResponse) String() string {
 func (*ResetConversationResponse) ProtoMessage() {}
 
 func (x *ResetConversationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_endge_ai_workbench_v1_workbench_proto_msgTypes[11]
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -828,7 +831,7 @@ func (x *ResetConversationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ResetConversationResponse.ProtoReflect.Descriptor instead.
 func (*ResetConversationResponse) Descriptor() ([]byte, []int) {
-	return file_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{11}
+	return file_api_proto_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *ResetConversationResponse) GetConversation() *Conversation {
@@ -850,7 +853,7 @@ type UpdateConversationModelRequest struct {
 
 func (x *UpdateConversationModelRequest) Reset() {
 	*x = UpdateConversationModelRequest{}
-	mi := &file_endge_ai_workbench_v1_workbench_proto_msgTypes[12]
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -862,7 +865,7 @@ func (x *UpdateConversationModelRequest) String() string {
 func (*UpdateConversationModelRequest) ProtoMessage() {}
 
 func (x *UpdateConversationModelRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_endge_ai_workbench_v1_workbench_proto_msgTypes[12]
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -875,7 +878,7 @@ func (x *UpdateConversationModelRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateConversationModelRequest.ProtoReflect.Descriptor instead.
 func (*UpdateConversationModelRequest) Descriptor() ([]byte, []int) {
-	return file_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{12}
+	return file_api_proto_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *UpdateConversationModelRequest) GetActorId() string {
@@ -915,7 +918,7 @@ type UpdateConversationModelResponse struct {
 
 func (x *UpdateConversationModelResponse) Reset() {
 	*x = UpdateConversationModelResponse{}
-	mi := &file_endge_ai_workbench_v1_workbench_proto_msgTypes[13]
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -927,7 +930,7 @@ func (x *UpdateConversationModelResponse) String() string {
 func (*UpdateConversationModelResponse) ProtoMessage() {}
 
 func (x *UpdateConversationModelResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_endge_ai_workbench_v1_workbench_proto_msgTypes[13]
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -940,7 +943,7 @@ func (x *UpdateConversationModelResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateConversationModelResponse.ProtoReflect.Descriptor instead.
 func (*UpdateConversationModelResponse) Descriptor() ([]byte, []int) {
-	return file_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{13}
+	return file_api_proto_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *UpdateConversationModelResponse) GetConversation() *Conversation {
@@ -964,7 +967,7 @@ type Message struct {
 
 func (x *Message) Reset() {
 	*x = Message{}
-	mi := &file_endge_ai_workbench_v1_workbench_proto_msgTypes[14]
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -976,7 +979,7 @@ func (x *Message) String() string {
 func (*Message) ProtoMessage() {}
 
 func (x *Message) ProtoReflect() protoreflect.Message {
-	mi := &file_endge_ai_workbench_v1_workbench_proto_msgTypes[14]
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -989,7 +992,7 @@ func (x *Message) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Message.ProtoReflect.Descriptor instead.
 func (*Message) Descriptor() ([]byte, []int) {
-	return file_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{14}
+	return file_api_proto_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *Message) GetId() string {
@@ -1047,7 +1050,7 @@ type ListMessagesRequest struct {
 
 func (x *ListMessagesRequest) Reset() {
 	*x = ListMessagesRequest{}
-	mi := &file_endge_ai_workbench_v1_workbench_proto_msgTypes[15]
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1059,7 +1062,7 @@ func (x *ListMessagesRequest) String() string {
 func (*ListMessagesRequest) ProtoMessage() {}
 
 func (x *ListMessagesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_endge_ai_workbench_v1_workbench_proto_msgTypes[15]
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1072,7 +1075,7 @@ func (x *ListMessagesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListMessagesRequest.ProtoReflect.Descriptor instead.
 func (*ListMessagesRequest) Descriptor() ([]byte, []int) {
-	return file_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{15}
+	return file_api_proto_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *ListMessagesRequest) GetActorId() string {
@@ -1111,16 +1114,17 @@ func (x *ListMessagesRequest) GetCursor() string {
 }
 
 type ListMessagesResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Items         []*Message             `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
-	NextCursor    string                 `protobuf:"bytes,2,opt,name=next_cursor,json=nextCursor,proto3" json:"next_cursor,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	Items             []*Message             `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
+	NextCursor        string                 `protobuf:"bytes,2,opt,name=next_cursor,json=nextCursor,proto3" json:"next_cursor,omitempty"`
+	OpenClarification *Clarification         `protobuf:"bytes,3,opt,name=open_clarification,json=openClarification,proto3" json:"open_clarification,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
 func (x *ListMessagesResponse) Reset() {
 	*x = ListMessagesResponse{}
-	mi := &file_endge_ai_workbench_v1_workbench_proto_msgTypes[16]
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1132,7 +1136,7 @@ func (x *ListMessagesResponse) String() string {
 func (*ListMessagesResponse) ProtoMessage() {}
 
 func (x *ListMessagesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_endge_ai_workbench_v1_workbench_proto_msgTypes[16]
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1145,7 +1149,7 @@ func (x *ListMessagesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListMessagesResponse.ProtoReflect.Descriptor instead.
 func (*ListMessagesResponse) Descriptor() ([]byte, []int) {
-	return file_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{16}
+	return file_api_proto_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *ListMessagesResponse) GetItems() []*Message {
@@ -1162,6 +1166,13 @@ func (x *ListMessagesResponse) GetNextCursor() string {
 	return ""
 }
 
+func (x *ListMessagesResponse) GetOpenClarification() *Clarification {
+	if x != nil {
+		return x.OpenClarification
+	}
+	return nil
+}
+
 type WorkspaceSnapshot struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	Payload        []byte                 `protobuf:"bytes,1,opt,name=payload,proto3" json:"payload,omitempty"`
@@ -1174,7 +1185,7 @@ type WorkspaceSnapshot struct {
 
 func (x *WorkspaceSnapshot) Reset() {
 	*x = WorkspaceSnapshot{}
-	mi := &file_endge_ai_workbench_v1_workbench_proto_msgTypes[17]
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1186,7 +1197,7 @@ func (x *WorkspaceSnapshot) String() string {
 func (*WorkspaceSnapshot) ProtoMessage() {}
 
 func (x *WorkspaceSnapshot) ProtoReflect() protoreflect.Message {
-	mi := &file_endge_ai_workbench_v1_workbench_proto_msgTypes[17]
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1199,7 +1210,7 @@ func (x *WorkspaceSnapshot) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WorkspaceSnapshot.ProtoReflect.Descriptor instead.
 func (*WorkspaceSnapshot) Descriptor() ([]byte, []int) {
-	return file_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{17}
+	return file_api_proto_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *WorkspaceSnapshot) GetPayload() []byte {
@@ -1243,7 +1254,7 @@ type ProviderAccess struct {
 
 func (x *ProviderAccess) Reset() {
 	*x = ProviderAccess{}
-	mi := &file_endge_ai_workbench_v1_workbench_proto_msgTypes[18]
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1255,7 +1266,7 @@ func (x *ProviderAccess) String() string {
 func (*ProviderAccess) ProtoMessage() {}
 
 func (x *ProviderAccess) ProtoReflect() protoreflect.Message {
-	mi := &file_endge_ai_workbench_v1_workbench_proto_msgTypes[18]
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1268,7 +1279,7 @@ func (x *ProviderAccess) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ProviderAccess.ProtoReflect.Descriptor instead.
 func (*ProviderAccess) Descriptor() ([]byte, []int) {
-	return file_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{18}
+	return file_api_proto_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *ProviderAccess) GetConnectionId() string {
@@ -1293,22 +1304,25 @@ func (x *ProviderAccess) GetCredential() string {
 }
 
 type RunRequest struct {
-	state          protoimpl.MessageState `protogen:"open.v1"`
-	RequestId      string                 `protobuf:"bytes,1,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
-	Actor          *Actor                 `protobuf:"bytes,2,opt,name=actor,proto3" json:"actor,omitempty"`
-	Workspace      *Workspace             `protobuf:"bytes,3,opt,name=workspace,proto3" json:"workspace,omitempty"`
-	ConversationId string                 `protobuf:"bytes,4,opt,name=conversation_id,json=conversationId,proto3" json:"conversation_id,omitempty"`
-	Prompt         string                 `protobuf:"bytes,5,opt,name=prompt,proto3" json:"prompt,omitempty"`
-	Model          *ModelSnapshot         `protobuf:"bytes,6,opt,name=model,proto3" json:"model,omitempty"`
-	Snapshot       *WorkspaceSnapshot     `protobuf:"bytes,7,opt,name=snapshot,proto3" json:"snapshot,omitempty"`
-	ProviderAccess *ProviderAccess        `protobuf:"bytes,8,opt,name=provider_access,json=providerAccess,proto3" json:"provider_access,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	state                  protoimpl.MessageState `protogen:"open.v1"`
+	RequestId              string                 `protobuf:"bytes,1,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
+	Actor                  *Actor                 `protobuf:"bytes,2,opt,name=actor,proto3" json:"actor,omitempty"`
+	Workspace              *Workspace             `protobuf:"bytes,3,opt,name=workspace,proto3" json:"workspace,omitempty"`
+	ConversationId         string                 `protobuf:"bytes,4,opt,name=conversation_id,json=conversationId,proto3" json:"conversation_id,omitempty"`
+	Prompt                 string                 `protobuf:"bytes,5,opt,name=prompt,proto3" json:"prompt,omitempty"`
+	Model                  *ModelSnapshot         `protobuf:"bytes,6,opt,name=model,proto3" json:"model,omitempty"`
+	Snapshot               *WorkspaceSnapshot     `protobuf:"bytes,7,opt,name=snapshot,proto3" json:"snapshot,omitempty"`
+	ProviderAccess         *ProviderAccess        `protobuf:"bytes,8,opt,name=provider_access,json=providerAccess,proto3" json:"provider_access,omitempty"`
+	InteractionId          string                 `protobuf:"bytes,9,opt,name=interaction_id,json=interactionId,proto3" json:"interaction_id,omitempty"`
+	ReplyToClarificationId string                 `protobuf:"bytes,10,opt,name=reply_to_clarification_id,json=replyToClarificationId,proto3" json:"reply_to_clarification_id,omitempty"`
+	SelectedCandidateId    string                 `protobuf:"bytes,11,opt,name=selected_candidate_id,json=selectedCandidateId,proto3" json:"selected_candidate_id,omitempty"`
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
 }
 
 func (x *RunRequest) Reset() {
 	*x = RunRequest{}
-	mi := &file_endge_ai_workbench_v1_workbench_proto_msgTypes[19]
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1320,7 +1334,7 @@ func (x *RunRequest) String() string {
 func (*RunRequest) ProtoMessage() {}
 
 func (x *RunRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_endge_ai_workbench_v1_workbench_proto_msgTypes[19]
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1333,7 +1347,7 @@ func (x *RunRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RunRequest.ProtoReflect.Descriptor instead.
 func (*RunRequest) Descriptor() ([]byte, []int) {
-	return file_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{19}
+	return file_api_proto_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *RunRequest) GetRequestId() string {
@@ -1392,6 +1406,187 @@ func (x *RunRequest) GetProviderAccess() *ProviderAccess {
 	return nil
 }
 
+func (x *RunRequest) GetInteractionId() string {
+	if x != nil {
+		return x.InteractionId
+	}
+	return ""
+}
+
+func (x *RunRequest) GetReplyToClarificationId() string {
+	if x != nil {
+		return x.ReplyToClarificationId
+	}
+	return ""
+}
+
+func (x *RunRequest) GetSelectedCandidateId() string {
+	if x != nil {
+		return x.SelectedCandidateId
+	}
+	return ""
+}
+
+type ClarificationCandidate struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CandidateId   string                 `protobuf:"bytes,1,opt,name=candidate_id,json=candidateId,proto3" json:"candidate_id,omitempty"`
+	DocumentType  string                 `protobuf:"bytes,2,opt,name=document_type,json=documentType,proto3" json:"document_type,omitempty"`
+	Identity      string                 `protobuf:"bytes,3,opt,name=identity,proto3" json:"identity,omitempty"`
+	DisplayName   string                 `protobuf:"bytes,4,opt,name=display_name,json=displayName,proto3" json:"display_name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ClarificationCandidate) Reset() {
+	*x = ClarificationCandidate{}
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ClarificationCandidate) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ClarificationCandidate) ProtoMessage() {}
+
+func (x *ClarificationCandidate) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ClarificationCandidate.ProtoReflect.Descriptor instead.
+func (*ClarificationCandidate) Descriptor() ([]byte, []int) {
+	return file_api_proto_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *ClarificationCandidate) GetCandidateId() string {
+	if x != nil {
+		return x.CandidateId
+	}
+	return ""
+}
+
+func (x *ClarificationCandidate) GetDocumentType() string {
+	if x != nil {
+		return x.DocumentType
+	}
+	return ""
+}
+
+func (x *ClarificationCandidate) GetIdentity() string {
+	if x != nil {
+		return x.Identity
+	}
+	return ""
+}
+
+func (x *ClarificationCandidate) GetDisplayName() string {
+	if x != nil {
+		return x.DisplayName
+	}
+	return ""
+}
+
+type Clarification struct {
+	state         protoimpl.MessageState    `protogen:"open.v1"`
+	Id            string                    `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	InteractionId string                    `protobuf:"bytes,2,opt,name=interaction_id,json=interactionId,proto3" json:"interaction_id,omitempty"`
+	TaskId        string                    `protobuf:"bytes,3,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
+	Slot          string                    `protobuf:"bytes,4,opt,name=slot,proto3" json:"slot,omitempty"`
+	Question      string                    `protobuf:"bytes,5,opt,name=question,proto3" json:"question,omitempty"`
+	Candidates    []*ClarificationCandidate `protobuf:"bytes,6,rep,name=candidates,proto3" json:"candidates,omitempty"`
+	PlanVersion   int32                     `protobuf:"varint,7,opt,name=plan_version,json=planVersion,proto3" json:"plan_version,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Clarification) Reset() {
+	*x = Clarification{}
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Clarification) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Clarification) ProtoMessage() {}
+
+func (x *Clarification) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Clarification.ProtoReflect.Descriptor instead.
+func (*Clarification) Descriptor() ([]byte, []int) {
+	return file_api_proto_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *Clarification) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *Clarification) GetInteractionId() string {
+	if x != nil {
+		return x.InteractionId
+	}
+	return ""
+}
+
+func (x *Clarification) GetTaskId() string {
+	if x != nil {
+		return x.TaskId
+	}
+	return ""
+}
+
+func (x *Clarification) GetSlot() string {
+	if x != nil {
+		return x.Slot
+	}
+	return ""
+}
+
+func (x *Clarification) GetQuestion() string {
+	if x != nil {
+		return x.Question
+	}
+	return ""
+}
+
+func (x *Clarification) GetCandidates() []*ClarificationCandidate {
+	if x != nil {
+		return x.Candidates
+	}
+	return nil
+}
+
+func (x *Clarification) GetPlanVersion() int32 {
+	if x != nil {
+		return x.PlanVersion
+	}
+	return 0
+}
+
 type RunResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Type          RunEventType           `protobuf:"varint,1,opt,name=type,proto3,enum=endge.ai.workbench.v1.RunEventType" json:"type,omitempty"`
@@ -1401,13 +1596,15 @@ type RunResponse struct {
 	ErrorCode     string                 `protobuf:"bytes,5,opt,name=error_code,json=errorCode,proto3" json:"error_code,omitempty"`
 	ErrorMessage  string                 `protobuf:"bytes,6,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
 	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	InteractionId string                 `protobuf:"bytes,8,opt,name=interaction_id,json=interactionId,proto3" json:"interaction_id,omitempty"`
+	Clarification *Clarification         `protobuf:"bytes,9,opt,name=clarification,proto3" json:"clarification,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *RunResponse) Reset() {
 	*x = RunResponse{}
-	mi := &file_endge_ai_workbench_v1_workbench_proto_msgTypes[20]
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1419,7 +1616,7 @@ func (x *RunResponse) String() string {
 func (*RunResponse) ProtoMessage() {}
 
 func (x *RunResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_endge_ai_workbench_v1_workbench_proto_msgTypes[20]
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1432,7 +1629,7 @@ func (x *RunResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RunResponse.ProtoReflect.Descriptor instead.
 func (*RunResponse) Descriptor() ([]byte, []int) {
-	return file_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{20}
+	return file_api_proto_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *RunResponse) GetType() RunEventType {
@@ -1484,6 +1681,20 @@ func (x *RunResponse) GetCreatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
+func (x *RunResponse) GetInteractionId() string {
+	if x != nil {
+		return x.InteractionId
+	}
+	return ""
+}
+
+func (x *RunResponse) GetClarification() *Clarification {
+	if x != nil {
+		return x.Clarification
+	}
+	return nil
+}
+
 type GetServiceInfoRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -1492,7 +1703,7 @@ type GetServiceInfoRequest struct {
 
 func (x *GetServiceInfoRequest) Reset() {
 	*x = GetServiceInfoRequest{}
-	mi := &file_endge_ai_workbench_v1_workbench_proto_msgTypes[21]
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1504,7 +1715,7 @@ func (x *GetServiceInfoRequest) String() string {
 func (*GetServiceInfoRequest) ProtoMessage() {}
 
 func (x *GetServiceInfoRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_endge_ai_workbench_v1_workbench_proto_msgTypes[21]
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1517,7 +1728,7 @@ func (x *GetServiceInfoRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetServiceInfoRequest.ProtoReflect.Descriptor instead.
 func (*GetServiceInfoRequest) Descriptor() ([]byte, []int) {
-	return file_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{21}
+	return file_api_proto_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{23}
 }
 
 type GetServiceInfoResponse struct {
@@ -1531,7 +1742,7 @@ type GetServiceInfoResponse struct {
 
 func (x *GetServiceInfoResponse) Reset() {
 	*x = GetServiceInfoResponse{}
-	mi := &file_endge_ai_workbench_v1_workbench_proto_msgTypes[22]
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1543,7 +1754,7 @@ func (x *GetServiceInfoResponse) String() string {
 func (*GetServiceInfoResponse) ProtoMessage() {}
 
 func (x *GetServiceInfoResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_endge_ai_workbench_v1_workbench_proto_msgTypes[22]
+	mi := &file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1556,7 +1767,7 @@ func (x *GetServiceInfoResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetServiceInfoResponse.ProtoReflect.Descriptor instead.
 func (*GetServiceInfoResponse) Descriptor() ([]byte, []int) {
-	return file_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{22}
+	return file_api_proto_endge_ai_workbench_v1_workbench_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *GetServiceInfoResponse) GetService() string {
@@ -1580,11 +1791,11 @@ func (x *GetServiceInfoResponse) GetEnv() string {
 	return ""
 }
 
-var File_endge_ai_workbench_v1_workbench_proto protoreflect.FileDescriptor
+var File_api_proto_endge_ai_workbench_v1_workbench_proto protoreflect.FileDescriptor
 
-const file_endge_ai_workbench_v1_workbench_proto_rawDesc = "" +
+const file_api_proto_endge_ai_workbench_v1_workbench_proto_rawDesc = "" +
 	"\n" +
-	"%endge/ai/workbench/v1/workbench.proto\x12\x15endge.ai.workbench.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"V\n" +
+	"/api/proto/endge/ai/workbench/v1/workbench.proto\x12\x15endge.ai.workbench.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"V\n" +
 	"\x05Actor\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1a\n" +
 	"\busername\x18\x02 \x01(\tR\busername\x12!\n" +
@@ -1656,11 +1867,12 @@ const file_endge_ai_workbench_v1_workbench_proto_rawDesc = "" +
 	"\fworkspace_id\x18\x02 \x01(\tR\vworkspaceId\x12'\n" +
 	"\x0fconversation_id\x18\x03 \x01(\tR\x0econversationId\x12\x14\n" +
 	"\x05limit\x18\x04 \x01(\rR\x05limit\x12\x16\n" +
-	"\x06cursor\x18\x05 \x01(\tR\x06cursor\"m\n" +
+	"\x06cursor\x18\x05 \x01(\tR\x06cursor\"\xc2\x01\n" +
 	"\x14ListMessagesResponse\x124\n" +
 	"\x05items\x18\x01 \x03(\v2\x1e.endge.ai.workbench.v1.MessageR\x05items\x12\x1f\n" +
 	"\vnext_cursor\x18\x02 \x01(\tR\n" +
-	"nextCursor\"\x8f\x01\n" +
+	"nextCursor\x12S\n" +
+	"\x12open_clarification\x18\x03 \x01(\v2$.endge.ai.workbench.v1.ClarificationR\x11openClarification\"\x8f\x01\n" +
 	"\x11WorkspaceSnapshot\x12\x18\n" +
 	"\apayload\x18\x01 \x01(\fR\apayload\x12\x1e\n" +
 	"\n" +
@@ -1673,7 +1885,7 @@ const file_endge_ai_workbench_v1_workbench_proto_rawDesc = "" +
 	"\bbase_url\x18\x02 \x01(\tR\abaseUrl\x12\x1e\n" +
 	"\n" +
 	"credential\x18\x03 \x01(\tR\n" +
-	"credential\"\xb2\x03\n" +
+	"credential\"\xc8\x04\n" +
 	"\n" +
 	"RunRequest\x12\x1d\n" +
 	"\n" +
@@ -1684,7 +1896,26 @@ const file_endge_ai_workbench_v1_workbench_proto_rawDesc = "" +
 	"\x06prompt\x18\x05 \x01(\tR\x06prompt\x12:\n" +
 	"\x05model\x18\x06 \x01(\v2$.endge.ai.workbench.v1.ModelSnapshotR\x05model\x12D\n" +
 	"\bsnapshot\x18\a \x01(\v2(.endge.ai.workbench.v1.WorkspaceSnapshotR\bsnapshot\x12N\n" +
-	"\x0fprovider_access\x18\b \x01(\v2%.endge.ai.workbench.v1.ProviderAccessR\x0eproviderAccess\"\x91\x02\n" +
+	"\x0fprovider_access\x18\b \x01(\v2%.endge.ai.workbench.v1.ProviderAccessR\x0eproviderAccess\x12%\n" +
+	"\x0einteraction_id\x18\t \x01(\tR\rinteractionId\x129\n" +
+	"\x19reply_to_clarification_id\x18\n" +
+	" \x01(\tR\x16replyToClarificationId\x122\n" +
+	"\x15selected_candidate_id\x18\v \x01(\tR\x13selectedCandidateId\"\x9f\x01\n" +
+	"\x16ClarificationCandidate\x12!\n" +
+	"\fcandidate_id\x18\x01 \x01(\tR\vcandidateId\x12#\n" +
+	"\rdocument_type\x18\x02 \x01(\tR\fdocumentType\x12\x1a\n" +
+	"\bidentity\x18\x03 \x01(\tR\bidentity\x12!\n" +
+	"\fdisplay_name\x18\x04 \x01(\tR\vdisplayName\"\x81\x02\n" +
+	"\rClarification\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12%\n" +
+	"\x0einteraction_id\x18\x02 \x01(\tR\rinteractionId\x12\x17\n" +
+	"\atask_id\x18\x03 \x01(\tR\x06taskId\x12\x12\n" +
+	"\x04slot\x18\x04 \x01(\tR\x04slot\x12\x1a\n" +
+	"\bquestion\x18\x05 \x01(\tR\bquestion\x12M\n" +
+	"\n" +
+	"candidates\x18\x06 \x03(\v2-.endge.ai.workbench.v1.ClarificationCandidateR\n" +
+	"candidates\x12!\n" +
+	"\fplan_version\x18\a \x01(\x05R\vplanVersion\"\x84\x03\n" +
 	"\vRunResponse\x127\n" +
 	"\x04type\x18\x01 \x01(\x0e2#.endge.ai.workbench.v1.RunEventTypeR\x04type\x12\x15\n" +
 	"\x06run_id\x18\x02 \x01(\tR\x05runId\x12\x1d\n" +
@@ -1695,7 +1926,9 @@ const file_endge_ai_workbench_v1_workbench_proto_rawDesc = "" +
 	"error_code\x18\x05 \x01(\tR\terrorCode\x12#\n" +
 	"\rerror_message\x18\x06 \x01(\tR\ferrorMessage\x129\n" +
 	"\n" +
-	"created_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"\x17\n" +
+	"created_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x12%\n" +
+	"\x0einteraction_id\x18\b \x01(\tR\rinteractionId\x12J\n" +
+	"\rclarification\x18\t \x01(\v2$.endge.ai.workbench.v1.ClarificationR\rclarification\"\x17\n" +
 	"\x15GetServiceInfoRequest\"^\n" +
 	"\x16GetServiceInfoResponse\x12\x18\n" +
 	"\aservice\x18\x01 \x01(\tR\aservice\x12\x18\n" +
@@ -1704,13 +1937,14 @@ const file_endge_ai_workbench_v1_workbench_proto_rawDesc = "" +
 	"\vMessageRole\x12\x1c\n" +
 	"\x18MESSAGE_ROLE_UNSPECIFIED\x10\x00\x12\x15\n" +
 	"\x11MESSAGE_ROLE_USER\x10\x01\x12\x1a\n" +
-	"\x16MESSAGE_ROLE_ASSISTANT\x10\x02*\xa5\x01\n" +
+	"\x16MESSAGE_ROLE_ASSISTANT\x10\x02*\xd0\x01\n" +
 	"\fRunEventType\x12\x1e\n" +
 	"\x1aRUN_EVENT_TYPE_UNSPECIFIED\x10\x00\x12\x1a\n" +
 	"\x16RUN_EVENT_TYPE_STARTED\x10\x01\x12 \n" +
 	"\x1cRUN_EVENT_TYPE_CONTENT_DELTA\x10\x02\x12\x1c\n" +
 	"\x18RUN_EVENT_TYPE_COMPLETED\x10\x03\x12\x19\n" +
-	"\x15RUN_EVENT_TYPE_FAILED\x10\x042\xa2\a\n" +
+	"\x15RUN_EVENT_TYPE_FAILED\x10\x04\x12)\n" +
+	"%RUN_EVENT_TYPE_CLARIFICATION_REQUIRED\x10\x052\xa2\a\n" +
 	"\x10WorkbenchService\x12p\n" +
 	"\x0fGetCapabilities\x12-.endge.ai.workbench.v1.GetCapabilitiesRequest\x1a..endge.ai.workbench.v1.GetCapabilitiesResponse\x12v\n" +
 	"\x11ListConversations\x12/.endge.ai.workbench.v1.ListConversationsRequest\x1a0.endge.ai.workbench.v1.ListConversationsResponse\x12y\n" +
@@ -1722,20 +1956,20 @@ const file_endge_ai_workbench_v1_workbench_proto_rawDesc = "" +
 	"\x0eGetServiceInfo\x12,.endge.ai.workbench.v1.GetServiceInfoRequest\x1a-.endge.ai.workbench.v1.GetServiceInfoResponseBHZFgithub.com/endge-lab/service-ai-workbench/api/workbench/v1;workbenchv1b\x06proto3"
 
 var (
-	file_endge_ai_workbench_v1_workbench_proto_rawDescOnce sync.Once
-	file_endge_ai_workbench_v1_workbench_proto_rawDescData []byte
+	file_api_proto_endge_ai_workbench_v1_workbench_proto_rawDescOnce sync.Once
+	file_api_proto_endge_ai_workbench_v1_workbench_proto_rawDescData []byte
 )
 
-func file_endge_ai_workbench_v1_workbench_proto_rawDescGZIP() []byte {
-	file_endge_ai_workbench_v1_workbench_proto_rawDescOnce.Do(func() {
-		file_endge_ai_workbench_v1_workbench_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_endge_ai_workbench_v1_workbench_proto_rawDesc), len(file_endge_ai_workbench_v1_workbench_proto_rawDesc)))
+func file_api_proto_endge_ai_workbench_v1_workbench_proto_rawDescGZIP() []byte {
+	file_api_proto_endge_ai_workbench_v1_workbench_proto_rawDescOnce.Do(func() {
+		file_api_proto_endge_ai_workbench_v1_workbench_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_api_proto_endge_ai_workbench_v1_workbench_proto_rawDesc), len(file_api_proto_endge_ai_workbench_v1_workbench_proto_rawDesc)))
 	})
-	return file_endge_ai_workbench_v1_workbench_proto_rawDescData
+	return file_api_proto_endge_ai_workbench_v1_workbench_proto_rawDescData
 }
 
-var file_endge_ai_workbench_v1_workbench_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_endge_ai_workbench_v1_workbench_proto_msgTypes = make([]protoimpl.MessageInfo, 23)
-var file_endge_ai_workbench_v1_workbench_proto_goTypes = []any{
+var file_api_proto_endge_ai_workbench_v1_workbench_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
+var file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes = make([]protoimpl.MessageInfo, 25)
+var file_api_proto_endge_ai_workbench_v1_workbench_proto_goTypes = []any{
 	(MessageRole)(0),                        // 0: endge.ai.workbench.v1.MessageRole
 	(RunEventType)(0),                       // 1: endge.ai.workbench.v1.RunEventType
 	(*Actor)(nil),                           // 2: endge.ai.workbench.v1.Actor
@@ -1758,15 +1992,17 @@ var file_endge_ai_workbench_v1_workbench_proto_goTypes = []any{
 	(*WorkspaceSnapshot)(nil),               // 19: endge.ai.workbench.v1.WorkspaceSnapshot
 	(*ProviderAccess)(nil),                  // 20: endge.ai.workbench.v1.ProviderAccess
 	(*RunRequest)(nil),                      // 21: endge.ai.workbench.v1.RunRequest
-	(*RunResponse)(nil),                     // 22: endge.ai.workbench.v1.RunResponse
-	(*GetServiceInfoRequest)(nil),           // 23: endge.ai.workbench.v1.GetServiceInfoRequest
-	(*GetServiceInfoResponse)(nil),          // 24: endge.ai.workbench.v1.GetServiceInfoResponse
-	(*timestamppb.Timestamp)(nil),           // 25: google.protobuf.Timestamp
+	(*ClarificationCandidate)(nil),          // 22: endge.ai.workbench.v1.ClarificationCandidate
+	(*Clarification)(nil),                   // 23: endge.ai.workbench.v1.Clarification
+	(*RunResponse)(nil),                     // 24: endge.ai.workbench.v1.RunResponse
+	(*GetServiceInfoRequest)(nil),           // 25: endge.ai.workbench.v1.GetServiceInfoRequest
+	(*GetServiceInfoResponse)(nil),          // 26: endge.ai.workbench.v1.GetServiceInfoResponse
+	(*timestamppb.Timestamp)(nil),           // 27: google.protobuf.Timestamp
 }
-var file_endge_ai_workbench_v1_workbench_proto_depIdxs = []int32{
+var file_api_proto_endge_ai_workbench_v1_workbench_proto_depIdxs = []int32{
 	4,  // 0: endge.ai.workbench.v1.Conversation.model:type_name -> endge.ai.workbench.v1.ModelSnapshot
-	25, // 1: endge.ai.workbench.v1.Conversation.created_at:type_name -> google.protobuf.Timestamp
-	25, // 2: endge.ai.workbench.v1.Conversation.updated_at:type_name -> google.protobuf.Timestamp
+	27, // 1: endge.ai.workbench.v1.Conversation.created_at:type_name -> google.protobuf.Timestamp
+	27, // 2: endge.ai.workbench.v1.Conversation.updated_at:type_name -> google.protobuf.Timestamp
 	7,  // 3: endge.ai.workbench.v1.ListConversationsResponse.items:type_name -> endge.ai.workbench.v1.Conversation
 	2,  // 4: endge.ai.workbench.v1.CreateConversationRequest.actor:type_name -> endge.ai.workbench.v1.Actor
 	3,  // 5: endge.ai.workbench.v1.CreateConversationRequest.workspace:type_name -> endge.ai.workbench.v1.Workspace
@@ -1779,59 +2015,62 @@ var file_endge_ai_workbench_v1_workbench_proto_depIdxs = []int32{
 	4,  // 12: endge.ai.workbench.v1.UpdateConversationModelRequest.model:type_name -> endge.ai.workbench.v1.ModelSnapshot
 	7,  // 13: endge.ai.workbench.v1.UpdateConversationModelResponse.conversation:type_name -> endge.ai.workbench.v1.Conversation
 	0,  // 14: endge.ai.workbench.v1.Message.role:type_name -> endge.ai.workbench.v1.MessageRole
-	25, // 15: endge.ai.workbench.v1.Message.created_at:type_name -> google.protobuf.Timestamp
+	27, // 15: endge.ai.workbench.v1.Message.created_at:type_name -> google.protobuf.Timestamp
 	16, // 16: endge.ai.workbench.v1.ListMessagesResponse.items:type_name -> endge.ai.workbench.v1.Message
-	2,  // 17: endge.ai.workbench.v1.RunRequest.actor:type_name -> endge.ai.workbench.v1.Actor
-	3,  // 18: endge.ai.workbench.v1.RunRequest.workspace:type_name -> endge.ai.workbench.v1.Workspace
-	4,  // 19: endge.ai.workbench.v1.RunRequest.model:type_name -> endge.ai.workbench.v1.ModelSnapshot
-	19, // 20: endge.ai.workbench.v1.RunRequest.snapshot:type_name -> endge.ai.workbench.v1.WorkspaceSnapshot
-	20, // 21: endge.ai.workbench.v1.RunRequest.provider_access:type_name -> endge.ai.workbench.v1.ProviderAccess
-	1,  // 22: endge.ai.workbench.v1.RunResponse.type:type_name -> endge.ai.workbench.v1.RunEventType
-	25, // 23: endge.ai.workbench.v1.RunResponse.created_at:type_name -> google.protobuf.Timestamp
-	5,  // 24: endge.ai.workbench.v1.WorkbenchService.GetCapabilities:input_type -> endge.ai.workbench.v1.GetCapabilitiesRequest
-	8,  // 25: endge.ai.workbench.v1.WorkbenchService.ListConversations:input_type -> endge.ai.workbench.v1.ListConversationsRequest
-	10, // 26: endge.ai.workbench.v1.WorkbenchService.CreateConversation:input_type -> endge.ai.workbench.v1.CreateConversationRequest
-	12, // 27: endge.ai.workbench.v1.WorkbenchService.ResetConversation:input_type -> endge.ai.workbench.v1.ResetConversationRequest
-	14, // 28: endge.ai.workbench.v1.WorkbenchService.UpdateConversationModel:input_type -> endge.ai.workbench.v1.UpdateConversationModelRequest
-	17, // 29: endge.ai.workbench.v1.WorkbenchService.ListMessages:input_type -> endge.ai.workbench.v1.ListMessagesRequest
-	21, // 30: endge.ai.workbench.v1.WorkbenchService.Run:input_type -> endge.ai.workbench.v1.RunRequest
-	23, // 31: endge.ai.workbench.v1.WorkbenchService.GetServiceInfo:input_type -> endge.ai.workbench.v1.GetServiceInfoRequest
-	6,  // 32: endge.ai.workbench.v1.WorkbenchService.GetCapabilities:output_type -> endge.ai.workbench.v1.GetCapabilitiesResponse
-	9,  // 33: endge.ai.workbench.v1.WorkbenchService.ListConversations:output_type -> endge.ai.workbench.v1.ListConversationsResponse
-	11, // 34: endge.ai.workbench.v1.WorkbenchService.CreateConversation:output_type -> endge.ai.workbench.v1.CreateConversationResponse
-	13, // 35: endge.ai.workbench.v1.WorkbenchService.ResetConversation:output_type -> endge.ai.workbench.v1.ResetConversationResponse
-	15, // 36: endge.ai.workbench.v1.WorkbenchService.UpdateConversationModel:output_type -> endge.ai.workbench.v1.UpdateConversationModelResponse
-	18, // 37: endge.ai.workbench.v1.WorkbenchService.ListMessages:output_type -> endge.ai.workbench.v1.ListMessagesResponse
-	22, // 38: endge.ai.workbench.v1.WorkbenchService.Run:output_type -> endge.ai.workbench.v1.RunResponse
-	24, // 39: endge.ai.workbench.v1.WorkbenchService.GetServiceInfo:output_type -> endge.ai.workbench.v1.GetServiceInfoResponse
-	32, // [32:40] is the sub-list for method output_type
-	24, // [24:32] is the sub-list for method input_type
-	24, // [24:24] is the sub-list for extension type_name
-	24, // [24:24] is the sub-list for extension extendee
-	0,  // [0:24] is the sub-list for field type_name
+	23, // 17: endge.ai.workbench.v1.ListMessagesResponse.open_clarification:type_name -> endge.ai.workbench.v1.Clarification
+	2,  // 18: endge.ai.workbench.v1.RunRequest.actor:type_name -> endge.ai.workbench.v1.Actor
+	3,  // 19: endge.ai.workbench.v1.RunRequest.workspace:type_name -> endge.ai.workbench.v1.Workspace
+	4,  // 20: endge.ai.workbench.v1.RunRequest.model:type_name -> endge.ai.workbench.v1.ModelSnapshot
+	19, // 21: endge.ai.workbench.v1.RunRequest.snapshot:type_name -> endge.ai.workbench.v1.WorkspaceSnapshot
+	20, // 22: endge.ai.workbench.v1.RunRequest.provider_access:type_name -> endge.ai.workbench.v1.ProviderAccess
+	22, // 23: endge.ai.workbench.v1.Clarification.candidates:type_name -> endge.ai.workbench.v1.ClarificationCandidate
+	1,  // 24: endge.ai.workbench.v1.RunResponse.type:type_name -> endge.ai.workbench.v1.RunEventType
+	27, // 25: endge.ai.workbench.v1.RunResponse.created_at:type_name -> google.protobuf.Timestamp
+	23, // 26: endge.ai.workbench.v1.RunResponse.clarification:type_name -> endge.ai.workbench.v1.Clarification
+	5,  // 27: endge.ai.workbench.v1.WorkbenchService.GetCapabilities:input_type -> endge.ai.workbench.v1.GetCapabilitiesRequest
+	8,  // 28: endge.ai.workbench.v1.WorkbenchService.ListConversations:input_type -> endge.ai.workbench.v1.ListConversationsRequest
+	10, // 29: endge.ai.workbench.v1.WorkbenchService.CreateConversation:input_type -> endge.ai.workbench.v1.CreateConversationRequest
+	12, // 30: endge.ai.workbench.v1.WorkbenchService.ResetConversation:input_type -> endge.ai.workbench.v1.ResetConversationRequest
+	14, // 31: endge.ai.workbench.v1.WorkbenchService.UpdateConversationModel:input_type -> endge.ai.workbench.v1.UpdateConversationModelRequest
+	17, // 32: endge.ai.workbench.v1.WorkbenchService.ListMessages:input_type -> endge.ai.workbench.v1.ListMessagesRequest
+	21, // 33: endge.ai.workbench.v1.WorkbenchService.Run:input_type -> endge.ai.workbench.v1.RunRequest
+	25, // 34: endge.ai.workbench.v1.WorkbenchService.GetServiceInfo:input_type -> endge.ai.workbench.v1.GetServiceInfoRequest
+	6,  // 35: endge.ai.workbench.v1.WorkbenchService.GetCapabilities:output_type -> endge.ai.workbench.v1.GetCapabilitiesResponse
+	9,  // 36: endge.ai.workbench.v1.WorkbenchService.ListConversations:output_type -> endge.ai.workbench.v1.ListConversationsResponse
+	11, // 37: endge.ai.workbench.v1.WorkbenchService.CreateConversation:output_type -> endge.ai.workbench.v1.CreateConversationResponse
+	13, // 38: endge.ai.workbench.v1.WorkbenchService.ResetConversation:output_type -> endge.ai.workbench.v1.ResetConversationResponse
+	15, // 39: endge.ai.workbench.v1.WorkbenchService.UpdateConversationModel:output_type -> endge.ai.workbench.v1.UpdateConversationModelResponse
+	18, // 40: endge.ai.workbench.v1.WorkbenchService.ListMessages:output_type -> endge.ai.workbench.v1.ListMessagesResponse
+	24, // 41: endge.ai.workbench.v1.WorkbenchService.Run:output_type -> endge.ai.workbench.v1.RunResponse
+	26, // 42: endge.ai.workbench.v1.WorkbenchService.GetServiceInfo:output_type -> endge.ai.workbench.v1.GetServiceInfoResponse
+	35, // [35:43] is the sub-list for method output_type
+	27, // [27:35] is the sub-list for method input_type
+	27, // [27:27] is the sub-list for extension type_name
+	27, // [27:27] is the sub-list for extension extendee
+	0,  // [0:27] is the sub-list for field type_name
 }
 
-func init() { file_endge_ai_workbench_v1_workbench_proto_init() }
-func file_endge_ai_workbench_v1_workbench_proto_init() {
-	if File_endge_ai_workbench_v1_workbench_proto != nil {
+func init() { file_api_proto_endge_ai_workbench_v1_workbench_proto_init() }
+func file_api_proto_endge_ai_workbench_v1_workbench_proto_init() {
+	if File_api_proto_endge_ai_workbench_v1_workbench_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_endge_ai_workbench_v1_workbench_proto_rawDesc), len(file_endge_ai_workbench_v1_workbench_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_proto_endge_ai_workbench_v1_workbench_proto_rawDesc), len(file_api_proto_endge_ai_workbench_v1_workbench_proto_rawDesc)),
 			NumEnums:      2,
-			NumMessages:   23,
+			NumMessages:   25,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_endge_ai_workbench_v1_workbench_proto_goTypes,
-		DependencyIndexes: file_endge_ai_workbench_v1_workbench_proto_depIdxs,
-		EnumInfos:         file_endge_ai_workbench_v1_workbench_proto_enumTypes,
-		MessageInfos:      file_endge_ai_workbench_v1_workbench_proto_msgTypes,
+		GoTypes:           file_api_proto_endge_ai_workbench_v1_workbench_proto_goTypes,
+		DependencyIndexes: file_api_proto_endge_ai_workbench_v1_workbench_proto_depIdxs,
+		EnumInfos:         file_api_proto_endge_ai_workbench_v1_workbench_proto_enumTypes,
+		MessageInfos:      file_api_proto_endge_ai_workbench_v1_workbench_proto_msgTypes,
 	}.Build()
-	File_endge_ai_workbench_v1_workbench_proto = out.File
-	file_endge_ai_workbench_v1_workbench_proto_goTypes = nil
-	file_endge_ai_workbench_v1_workbench_proto_depIdxs = nil
+	File_api_proto_endge_ai_workbench_v1_workbench_proto = out.File
+	file_api_proto_endge_ai_workbench_v1_workbench_proto_goTypes = nil
+	file_api_proto_endge_ai_workbench_v1_workbench_proto_depIdxs = nil
 }

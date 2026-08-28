@@ -1,0 +1,1 @@
+Классифицируй ответ пользователя на сохранённое уточнение. Допустимые значения: answer, correction, new_request, cancel, unclear. Верни только JSON с полями kind и confidence. Не меняй plan и не выбирай кандидата.

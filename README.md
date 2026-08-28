@@ -15,7 +15,7 @@ Configurator не должен обращаться к Workbench напряму�
 основной backend. Workbench будет отвечать за AI orchestration в рамках явно
 авторизованного запуска.
 
-## Возможности v0.5.0
+## Возможности v0.6.0
 
 - HTTP на Fiber;
 - dependency injection через `fx`;
@@ -23,13 +23,14 @@ Configurator не должен обращаться к Workbench напряму�
 - structured logging;
 - optional OpenTelemetry;
 - optional JWT/JWKS middleware;
-- PostgreSQL migrations для projections, conversations, messages и runs;
+- PostgreSQL migrations для projections, conversations, messages, runs, interactions и clarifications;
 - canonical `workbench.v1` protobuf и standard gRPC Health;
 - service-to-service OIDC authentication;
 - opaque cursor pagination, atomic reset и один active run на conversation;
 - реальный streaming adapter Ollama через native `/api/chat` и hardcoded adapter Anthropic;
 - локальный `endge-knowledge/v1` bundle и детерминированный поиск по публичной документации;
-- отключённая по умолчанию запись этапов retrieval в `tmp/debug`;
+- gated preparation pipeline, embedded prompt catalog и buffered response validation;
+- отключённая по умолчанию запись preparation trace в `tmp/debug`;
 - `/health` и `/version`;
 - Swagger/Scalar в non-production окружениях;
 - единый JSON-формат ошибок;
@@ -104,6 +105,10 @@ AI_KNOWLEDGE_MAX_RESULTS=8
 AI_DOMAIN_CONTEXT_MAX_RESULTS=20
 AI_CONVERSATION_CONTEXT_MESSAGE_LIMIT=10
 AI_MODEL_CONTEXT_MAX_CHARS=24000
+AI_PREPARATION_MAX_MODEL_CALLS=3
+AI_PREPARATION_MAX_CANDIDATES=5
+AI_RERANKER_MIN_CONFIDENCE=0.8
+AI_RESPONSE_BUFFER_MAX_BYTES=2097152
 AI_DEBUG=true
 AI_DEBUG_OUTPUT_PATH=tmp/debug
 AI_OLLAMA_REQUEST_TIMEOUT=2m
@@ -114,9 +119,10 @@ AI_OLLAMA_ALLOW_INSECURE_HTTP=false
 
 При `AI_DEBUG=true` каждый run создаёт каталог
 `tmp/debug/<conversation-id>/<UTC-time>_<request-id>/`. Файлы имеют числовые
-префиксы `00`–`07`: metadata, prompt, поисковые выражения, документация,
-выбранный контекст актуального Workspace, последние сообщения, план бюджета и
-точный provider-neutral `ModelRequest`. Текущий prompt не дублируется в истории.
+префиксы `00`–`12`: metadata, исходный запрос, normalization, plan, routing,
+документация, domain resolution, Interaction/clarification, история, adequacy,
+prompt manifest, точный provider-neutral `ModelRequest` и response validation.
+Пропущенный этап явно получает `status: skipped`. Текущий prompt не дублируется в истории.
 При `AI_DEBUG=false` файловая система debug recorder-ом не изменяется. `tmp/`
 целиком исключён из Git.
 

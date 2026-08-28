@@ -7,11 +7,13 @@ import (
 	"slices"
 	"sort"
 	"strings"
+	"sync"
 	"unicode"
 
 	"github.com/endge-lab/service-ai-workbench/internal/config"
 	"github.com/endge-lab/service-ai-workbench/internal/domain/entities"
 	"github.com/endge-lab/service-ai-workbench/internal/usecase/ports"
+	"golang.org/x/text/unicode/norm"
 )
 
 const (
@@ -39,26 +41,36 @@ type candidate struct {
 }
 
 type Selector struct {
-	limit int
+	limit      int
+	mutex      sync.Mutex
+	cache      map[string]snapshotIndex
+	cacheOrder []string
+}
+
+type snapshotIndex struct {
+	source     portableSnapshot
+	candidates []candidate
+	total      int
 }
 
 var _ ports.DomainContextSelector = (*Selector)(nil)
 
 func NewSelector(cfg *config.Config) ports.DomainContextSelector {
-	return &Selector{limit: cfg.Context.DomainMaxResults}
+	return &Selector{limit: cfg.Context.DomainMaxResults, cache: make(map[string]snapshotIndex)}
 }
 
-func (s *Selector) Select(_ context.Context, raw []byte, query entities.KnowledgeSearchQuery, limit int) entities.DomainContext {
-	result := entities.DomainContext{Limit: limit}
+func (s *Selector) Select(_ context.Context, input entities.DomainSelectionInput) entities.DomainContext {
+	result := entities.DomainContext{Limit: input.Limit}
 	if result.Limit < 1 {
 		result.Limit = s.limit
 	}
 
-	var source portableSnapshot
-	if err := json.Unmarshal(raw, &source); err != nil {
+	indexed, err := s.index(input)
+	if err != nil {
 		result.Error = fmt.Sprintf("decode workspace snapshot: %v", err)
 		return result
 	}
+	source := indexed.source
 	result.Kind = source.Kind
 	result.SchemaVersion = source.SchemaVersion
 	result.DomainVersion = source.DomainVersion
@@ -73,19 +85,8 @@ func (s *Selector) Select(_ context.Context, raw []byte, query entities.Knowledg
 		result.InstalledIntegrations = append(result.InstalledIntegrations, sanitizeRaw(integration))
 	}
 
-	candidates := make([]candidate, 0)
-	documentTypes := make([]string, 0, len(source.Documents))
-	for documentType := range source.Documents {
-		documentTypes = append(documentTypes, documentType)
-	}
-	sort.Strings(documentTypes)
-	for _, documentType := range documentTypes {
-		items := source.Documents[documentType]
-		result.TotalDocuments += len(items)
-		for _, item := range items {
-			candidates = append(candidates, newCandidate(documentType, item))
-		}
-	}
+	candidates := indexed.candidates
+	result.TotalDocuments = indexed.total
 
 	type scoredCandidate struct {
 		candidate candidate
@@ -94,7 +95,7 @@ func (s *Selector) Select(_ context.Context, raw []byte, query entities.Knowledg
 	}
 	direct := make([]scoredCandidate, 0)
 	for _, item := range candidates {
-		score, matched := scoreCandidate(item, query)
+		score, matched := scoreCandidate(item, input.Query)
 		if score > 0 {
 			direct = append(direct, scoredCandidate{candidate: item, score: score, matched: matched})
 		}
@@ -180,6 +181,48 @@ func (s *Selector) Select(_ context.Context, raw []byte, query entities.Knowledg
 
 	result.Available = true
 	return result
+}
+
+func (s *Selector) index(input entities.DomainSelectionInput) (snapshotIndex, error) {
+	key := strings.Join([]string{input.WorkspaceID, input.Generation, input.SnapshotSHA256}, "\x00")
+	s.mutex.Lock()
+	if indexed, exists := s.cache[key]; exists {
+		s.mutex.Unlock()
+		return indexed, nil
+	}
+	s.mutex.Unlock()
+
+	var source portableSnapshot
+	if err := json.Unmarshal(input.Snapshot, &source); err != nil {
+		return snapshotIndex{}, err
+	}
+	indexed := snapshotIndex{source: source, candidates: make([]candidate, 0)}
+	documentTypes := make([]string, 0, len(source.Documents))
+	for documentType := range source.Documents {
+		documentTypes = append(documentTypes, documentType)
+	}
+	sort.Strings(documentTypes)
+	for _, documentType := range documentTypes {
+		items := source.Documents[documentType]
+		indexed.total += len(items)
+		for _, item := range items {
+			indexed.candidates = append(indexed.candidates, newCandidate(documentType, item))
+		}
+	}
+	indexed.source.Documents = nil
+
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	if existing, exists := s.cache[key]; exists {
+		return existing, nil
+	}
+	s.cache[key] = indexed
+	s.cacheOrder = append(s.cacheOrder, key)
+	if len(s.cacheOrder) > 8 {
+		delete(s.cache, s.cacheOrder[0])
+		s.cacheOrder = s.cacheOrder[1:]
+	}
+	return indexed, nil
 }
 
 func newCandidate(documentType string, raw json.RawMessage) candidate {
@@ -273,7 +316,16 @@ func normalizeReference(value string) string {
 }
 
 func normalize(value string) string {
-	return strings.Join(strings.Fields(strings.ToLower(value)), " ")
+	value = norm.NFKC.String(value)
+	value = strings.Map(func(character rune) rune {
+		switch character {
+		case 'Ё', 'ё':
+			return 'е'
+		default:
+			return unicode.ToLower(character)
+		}
+	}, value)
+	return strings.Join(strings.Fields(value), " ")
 }
 
 func tokenSet(value string) map[string]struct{} {
