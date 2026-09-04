@@ -15,7 +15,7 @@ Configurator не должен обращаться к Workbench напряму�
 основной backend. Workbench будет отвечать за AI orchestration в рамках явно
 авторизованного запуска.
 
-## Возможности v0.7.0
+## Возможности v0.6.0
 
 - HTTP на Fiber;
 - dependency injection через `fx`;
