@@ -12,9 +12,8 @@ type entityDefinition struct {
 }
 
 var entityRegistry = []entityDefinition{
-	{collection: "projects", aliases: []string{"проект", "проекты", "project", "projects"}, prefixes: []string{"проект"}},
-	{collection: "tenants", aliases: []string{"тенант", "тенанты", "tenant", "tenants"}, prefixes: []string{"тенант"}},
-	{collection: "environments", aliases: []string{"окружение", "окружения", "environment", "environments"}, prefixes: []string{"окружен"}},
+	{collection: "facets", aliases: []string{"фасет", "фасеты", "facet", "facets"}},
+	{collection: "facet-documents", aliases: []string{"документ фасета", "документы фасета", "фасетный документ", "фасетные документы", "facet document", "facet documents"}, prefixes: []string{"фасетн"}},
 	{collection: "folders", aliases: []string{"папка", "папки", "раздел", "разделы", "folder", "folders"}, prefixes: []string{"папк", "раздел"}},
 	{collection: "types", aliases: []string{"тип", "типы", "type", "types"}, prefixes: []string{"тип"}},
 	{collection: "queries", aliases: []string{"запрос", "запросы", "query", "queries"}, prefixes: []string{"запрос"}},
